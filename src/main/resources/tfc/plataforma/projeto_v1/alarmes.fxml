@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.gluonhq.charm.glisten.control.AppBar?>
+<?import com.gluonhq.charm.glisten.control.ToggleButtonGroup?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane prefHeight="719.0" prefWidth="1366.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tfc.plataforma.projeto_v1.Controller">
+   <children>
+      <AppBar prefHeight="200.0" prefWidth="1366.0" titleText="" />
+      <ToggleButtonGroup layoutX="144.0" layoutY="234.0" selectionType="SINGLE">
+          <toggles>
+              <ToggleButton prefHeight="30.0" prefWidth="69.0" textFill="#020ef5" />
+          </toggles>
+      </ToggleButtonGroup>
+   </children>
+</AnchorPane>
