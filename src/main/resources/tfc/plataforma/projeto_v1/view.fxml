@@ -1,51 +1,101 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.gluonhq.charm.glisten.control.AppBar?>
-<?import com.gluonhq.charm.glisten.control.BottomNavigationButton?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
 
-<AnchorPane fx:id="mainPane" prefHeight="760.0" prefWidth="1366.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tfc.plataforma.projeto_v1.Controller">
+<AnchorPane fx:id="mainPane" prefHeight="600.0" prefWidth="1366.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tfc.plataforma.projeto_v1.Controller">
    <children>
-      <Button fx:id="btnConectar" layoutX="35.0" layoutY="599.0" mnemonicParsing="false" onAction="#onConnectButtonClick" text="Conectar" />
-      <Button fx:id="btnDesconectar" layoutX="124.0" layoutY="599.0" mnemonicParsing="false" onAction="#onDisconnectButtonClick" text="Disconectar" />
-      <AppBar prefHeight="73.0" prefWidth="1366.0" titleText="" />
-      <BottomNavigationButton id="button_lista" layoutY="657.0" prefHeight="103.0" prefWidth="455.0" />
-      <BottomNavigationButton id="button_home" layoutX="448.0" layoutY="657.0" prefHeight="103.0" prefWidth="463.0" />
-      <BottomNavigationButton id="button_alarmes" fx:id="alarm_page" layoutX="911.0" layoutY="657.0" onAction="#switchToAlarms" prefHeight="103.0" prefWidth="455.0" />
-      <ImageView id="img_home" fitHeight="54.0" fitWidth="60.0" layoutX="653.0" layoutY="668.0" pickOnBounds="true" preserveRatio="true">
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#007eff" height="81.0" layoutX="-3.0" layoutY="630.0" stroke="BLACK" strokeType="INSIDE" width="1369.0" />
+      <ImageView id="img_home" fitHeight="44.0" fitWidth="43.0" layoutX="663.0" layoutY="640.0" onMouseClicked="#switchToHome" pickOnBounds="true" preserveRatio="true">
+         <Image url="@../../../img/home.png" />
+      </ImageView>
+      <ImageView id="img_alarme" fitHeight="44.0" fitWidth="43.0" layoutX="1145.0" layoutY="640.0" onMouseClicked="#switchToAlarms" pickOnBounds="true" preserveRatio="true">
+         <Image url="@../../../img/bell.png" />
+      </ImageView>
+      <ImageView id="img_lista" fitHeight="44.0" fitWidth="43.0" layoutX="195.0" layoutY="640.0" onMouseClicked="#switchToList" pickOnBounds="true" preserveRatio="true">
+         <Image url="@../../../img/list.png" />
+      </ImageView>
+      <Text fill="WHITE" layoutX="147.0" layoutY="703.0" onMouseClicked="#switchToList" strokeType="OUTSIDE" strokeWidth="0.0" text="Dados Armazenados">
+         <font>
+            <Font name="System Bold" size="16.0" />
+         </font>
+      </Text>
+      <Text fill="WHITE" layoutX="665.0" layoutY="703.0" onMouseClicked="#switchToHome" strokeType="OUTSIDE" strokeWidth="0.0" text="Home">
+         <font>
+            <Font name="System Bold" size="15.0" />
+         </font>
+      </Text>
+      <Text fill="WHITE" layoutX="1136.0" layoutY="703.0" onMouseClicked="#switchToAlarms" strokeType="OUTSIDE" strokeWidth="0.0" text="Alarmes">
+         <font>
+            <Font name="System Bold" size="16.0" />
+         </font>
+      </Text>
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#007eff" height="91.0" layoutX="-1.0" layoutY="-1.0" stroke="BLACK" strokeType="INSIDE" width="1369.0" />
+      <Button fx:id="btnDesconectar" layoutX="117.0" layoutY="44.0" mnemonicParsing="false" onAction="#disconectar" text="Disconectar" />
+      <Button fx:id="btnConectar" layoutX="29.0" layoutY="44.0" mnemonicParsing="false" onAction="#conectar" text="Conectar" />
+      <Text fill="WHITE" layoutX="639.0" layoutY="64.0" onMouseClicked="#switchToHome" strokeType="OUTSIDE" strokeWidth="0.0" text="Home">
+         <font>
+            <Font name="System Bold" size="48.0" />
+         </font>
+      </Text>
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="452.0" layoutX="43.0" layoutY="128.0" stroke="BLACK" strokeLineCap="ROUND" strokeType="OUTSIDE" strokeWidth="2.0" width="555.0" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="246.0" layoutX="663.0" layoutY="124.0" stroke="BLACK" strokeLineCap="ROUND" strokeType="OUTSIDE" strokeWidth="2.0" width="319.0" />
+      <ImageView id="temp_icon" fitHeight="98.0" fitWidth="111.0" layoutX="195.0" layoutY="229.0" pickOnBounds="true" preserveRatio="true">
          <image>
-            <Image url="@../../../../../../images/home.png" />
+            <Image url="@../../../img/temperature.png" />
          </image>
       </ImageView>
-      <ImageView id="img_alarme" fitHeight="54.0" fitWidth="60.0" layoutX="1139.0" layoutY="668.0" pickOnBounds="true" preserveRatio="true">
+      <Text layoutX="108.0" layoutY="192.0" onMouseClicked="#switchToHome" strokeType="OUTSIDE" strokeWidth="0.0" text="Temperatura Atual:">
+         <font>
+            <Font name="System Bold" size="48.0" />
+         </font>
+      </Text>
+      <Text layoutX="291.0" layoutY="295.0" onMouseClicked="#switchToHome" strokeType="OUTSIDE" strokeWidth="0.0" text="30°C" wrappingWidth="111.0546875">
+         <font>
+            <Font name="System Bold" size="48.0" />
+         </font>
+      </Text>
+      <ImageView fitHeight="88.0" fitWidth="78.0" layoutX="217.0" layoutY="481.0" pickOnBounds="true" preserveRatio="true">
          <image>
-            <Image url="@../../../../../../images/bell.png" />
+            <Image url="@../../../img/drop.png" />
          </image>
       </ImageView>
-      <ImageView id="img_lista" fitHeight="54.0" fitWidth="60.0" layoutX="182.0" layoutY="672.0" pickOnBounds="true" preserveRatio="true">
-         <image>
-            <Image url="@../../../../../../images/list.png" />
-         </image>
-      </ImageView>
-      <Label id="label_home" layoutX="654.0" layoutY="733.0" prefHeight="27.0" prefWidth="61.0" text="Home" textAlignment="CENTER">
+      <Text layoutX="291.0" layoutY="540.0" onMouseClicked="#switchToHome" strokeType="OUTSIDE" strokeWidth="0.0" text="50%" wrappingWidth="111.0546875">
          <font>
-            <Font name="System Bold" size="18.0" />
+            <Font name="System Bold" size="48.0" />
          </font>
-      </Label>
-      <Label id="label_alarme" layoutX="1132.0" layoutY="733.0" prefHeight="27.0" prefWidth="85.0" text="Alarmes" textAlignment="CENTER">
+      </Text>
+      <Text layoutX="108.0" layoutY="447.0" onMouseClicked="#switchToHome" strokeType="OUTSIDE" strokeWidth="0.0" text="Humidade Relativa:">
          <font>
-            <Font name="System Bold" size="18.0" />
+            <Font name="System Bold" size="48.0" />
          </font>
-      </Label>
-      <Label id="label_lista" layoutX="130.0" layoutY="733.0" prefHeight="27.0" prefWidth="177.0" text="Dados Armazenados" textAlignment="CENTER">
+      </Text>
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="246.0" layoutX="1007.0" layoutY="124.0" stroke="BLACK" strokeLineCap="ROUND" strokeType="OUTSIDE" strokeWidth="2.0" width="319.0" />
+      <Text layoutX="684.0" layoutY="192.0" onMouseClicked="#switchToHome" strokeType="OUTSIDE" strokeWidth="0.0" text="Luminosidade:">
          <font>
-            <Font name="System Bold" size="18.0" />
+            <Font name="System Bold" size="42.0" />
          </font>
-      </Label>
+      </Text>
+      <Text layoutX="1038.0" layoutY="190.0" onMouseClicked="#switchToHome" strokeType="OUTSIDE" strokeWidth="0.0" text="Nível de Gás:">
+         <font>
+            <Font name="System Bold" size="42.0" />
+         </font>
+      </Text>
+      <Text fill="RED" layoutX="777.0" layoutY="263.0" onMouseClicked="#switchToHome" strokeType="OUTSIDE" strokeWidth="0.0" text="Alta">
+         <font>
+            <Font name="System Bold" size="48.0" />
+         </font>
+      </Text>
+      <Text fill="#33ff00" layoutX="1090.0" layoutY="262.0" onMouseClicked="#switchToHome" strokeType="OUTSIDE" strokeWidth="0.0" text="Normal">
+         <font>
+            <Font name="System Bold" size="48.0" />
+         </font>
+      </Text>
+      <Button id="btnEstores" fx:id="btnEstores" layoutX="774.0" layoutY="307.0" mnemonicParsing="false" onAction="#acionarEstores" text="Acionar Estores" />
    </children>
 </AnchorPane>
