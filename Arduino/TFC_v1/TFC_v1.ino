@@ -58,12 +58,17 @@ void loop(){
       }
     }
     
+    Serial.print("Temperatura: ");
     Serial.print(temperatura); 
-    /*Serial.print(";");
+    Serial.print("°C");
+    Serial.println();
+    Serial.print("Humidade: ");
     Serial.print(humidity_value); 
-    Serial.print(";");
+    Serial.print("%");
+    Serial.println();
+    Serial.print("Luminosidade: ");
     Serial.print(photoresistor_value); 
-    Serial.print(";");*/
+
     Serial.println();
     
 	  delay(5000);
@@ -104,10 +109,12 @@ void redLedToggle(){
 //Função para ler sensor de humidade
 void readHumidity(){
     float temp = dht.readHumidity();
-    if(!isnan(humidity_value)){
-      humidity_value = temp;
+    while(isnan(temp)){
+      temp = dht.readHumidity();
     }
-    
+
+    humidity_value = temp;
+
 }
 
 //Função para ativar o Buzzer
