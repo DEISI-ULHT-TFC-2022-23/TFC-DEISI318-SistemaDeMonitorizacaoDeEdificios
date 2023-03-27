@@ -9,23 +9,24 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import org.controlsfx.control.tableview2.filter.filtereditor.SouthFilter;
 
-import java.awt.*;
+import java.sql.*;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
+import java.util.ArrayList;
 
-public class Controller {
-    SerialPort port = SerialPort.getCommPorts()[0]; //Encontra o SerialPort do Arduino
-
-    @FXML
-    private AnchorPane mainPane;
+public class Controller implements SerialPortDataListener{
+    SerialPort port;
+    double temp = 0;
+    double lum = 0;
+    String buffer = "";
+    ArrayList<String> bufferData = new ArrayList<String>();
 
     /**Função para conectar ao Arduino. É chamada ao carregar no botão "Conectar" na plataforma*/
     @FXML
-    private void conectar(){
+    private void conectar() throws SQLException{
+        port = SerialPort.getCommPorts()[0];
         port.setComPortParameters(9600, 8, 1, 0);
         port.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 0, 0);
         if (port.openPort()){
@@ -33,9 +34,10 @@ public class Controller {
         }else{
             System.out.println("Couldn't open port");
         }
-        PacketListener listener = new PacketListener();
-        port.addDataListener(listener);
-
+        //PacketListener listener = new PacketListener();
+        port.addDataListener(this);
+        port.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 100, 0);
+        connectToDb();
     }
 
     /**Função para disconectar o Arduino. É chamada através do botão "Disconectar" na plataforma.*/
@@ -50,16 +52,75 @@ public class Controller {
         }
     }
 
+    /**Função para conectar-se à base de dados*/
+    private void connectToDb() throws SQLException{
+        Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/tfc","root","12151829");
+        String sql = "SELECT * FROM dados";
+
+        try (conn;
+             Statement stmt  = conn.createStatement();
+             ResultSet rs    = stmt.executeQuery(sql)) {
+
+            /*
+            while (rs.next()) {
+                System.out.println(rs.getString("data") + "\t" +
+                        rs.getString("temperatura")  + "\t" +
+                        rs.getString("luminosidade"));
+
+            }*/
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+
+
     @FXML
-    protected void displayData(String teste){
-        System.out.println("Temp: " + teste + " C");
+    protected void displayData(ArrayList<String> dados){
+        if(dados.size() >= 2){
+            System.out.println("Temp " + dados.get(0));
+            temp = Double.parseDouble(dados.get(0));
+            updateLabel(temp_id,dados.get(0) + "");
+
+            System.out.println("Lum " + dados.get(1));
+            lum = Double.parseDouble(dados.get(1));
+            //luminosidade_id.setText("Alta");
+
+            dados.removeAll(dados);
+        }
+    }
+
+    /**Função para atualizar o texto em um campo de texto de JavaFX
+     * @param txtLabel: text label a ser atualizada
+     * @param text: novo texto da label
+     * */
+    @FXML
+    protected void updateLabel(Text txtLabel, String text){
+        Platform.runLater(() -> {
+            txtLabel.setText(text);
+        });
+    }
+
+    @FXML
+    protected void displayLuminosidade(String quantidade){
+        int number = Integer.parseInt(quantidade);
+
+        if(number <= 200){
+            luminosidade_id.setText("Baixa");
+        }else if(number> 200 && number <1000){
+            luminosidade_id.setText("Média");
+        }else{
+            luminosidade_id.setText("Alta");
+        }
+
     }
 
     /**Função para enviar um sinal ao Arduino para que os Estores (servo motor) sejam acionados*/
     @FXML
     protected void acionarEstores(){
-        byte[] data = "1".getBytes();
-        port.writeBytes(data, data.length);
+        byte[] data = "4".getBytes();
+        if(port != null){
+            port.writeBytes(data, data.length);
+        }
     }
 
     /**Função para enviar um sinal ao Arduino para acionar o Buzzer*/
@@ -116,4 +177,54 @@ public class Controller {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public int getListeningEvents() {
+        return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
+    }
+
+    @Override
+    public void serialEvent(SerialPortEvent event) {
+
+        displayData(bufferData);
+
+        byte[] newData = event.getReceivedData();
+        for(byte i: newData){
+            char c = (char) i;
+            if(c=='\n'){
+                bufferData.add(buffer);
+                buffer = "";
+            }else{
+                buffer += c;
+            }
+        }
+        /*byte[] buffer = new byte[event.getSerialPort().bytesAvailable()];
+        event.getSerialPort().readBytes(buffer, buffer.length);
+
+        try {
+            String data = new String(buffer);
+            double temp = Double.parseDouble(data.trim());
+            if(temp != 0){
+                temperature = temp;
+            }
+        } catch (NumberFormatException e) {
+
+        }
+
+        // Update the temperature label on the JavaFX Application Thread
+        Platform.runLater(() -> {
+            temp_id.setText(temperature + "°C");
+        });*/
+
+    }
+    @FXML
+    private AnchorPane mainPane;
+    @FXML
+    private Text temp_id;
+    @FXML
+    private Text humidade_id;
+    @FXML
+    private Text luminosidade_id;
+    @FXML
+    private Text grausCelcius;
 }

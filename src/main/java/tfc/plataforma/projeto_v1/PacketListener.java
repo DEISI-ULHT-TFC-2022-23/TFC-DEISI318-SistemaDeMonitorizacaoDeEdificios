@@ -21,8 +21,8 @@ public class PacketListener implements SerialPortDataListener {
     @Override
     public void serialEvent(SerialPortEvent event) {
         byte[] newData = event.getReceivedData();
-        String str = new String(newData);
-        System.out.println("Received data: " + str);
-
+        for(byte i: newData){
+            System.out.print((char) i);
+        }
     }
 }

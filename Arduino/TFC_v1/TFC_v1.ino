@@ -39,57 +39,63 @@ void setup(){
    
 void loop(){
     readSensors();
-  	//redLedToggle();
-    //startBuzzer();
-    //startServo();
-    
 
     if (Serial.available()) {
       char msg = Serial.read();
-      if (msg == '1') {
+      if (msg == '1') { //Acionar servo
         startServo();
-        Serial.println("Servo Acionado");
-      }else if(msg == '2'){
+        //Serial.println("Servo Acionado");
+      }else if(msg == '2'){//Acionar Buzzer
         startBuzzer();
-        Serial.println("Buzzer Acionado");        
-      }else if(msg == '3'){
+        //Serial.println("Buzzer Acionado");        
+      }else if(msg == '3'){//Acionar led
         redLedToggle();
-        Serial.println("LED Acionado");        
+        //Serial.println("LED Acionado");        
+      }else if(msg == '4'){//Ler temperatura
+        readTemp();
+      }else if(msg == '5'){//Ler luminosidade
+        readPhotoresistor();
+      }else if(msg == '6'){//Ler humidade
+        readHumidity();
+      }else if(msg == '7'){//Ler sensor ultrassônico
+        readUltrasonic();
       }
     }
     
-    Serial.print("Temperatura: ");
-    Serial.print(temperatura); 
-    Serial.print("°C");
+    //Serial.print("Temperatura: ");
+    //Serial.print(temperatura); 
+    /*Serial.print("°C");
     Serial.println();
     Serial.print("Humidade: ");
     Serial.print(humidity_value); 
     Serial.print("%");
     Serial.println();
     Serial.print("Luminosidade: ");
-    Serial.print(photoresistor_value); 
-
-    Serial.println();
-    
+    Serial.print(photoresistor_value); */
+    Serial.begin(9600);
 	  delay(5000);
 }
 
 //Função para ler todos os sensores
 void readSensors(){
-  readPhotoresistor();
   readTemp();
-  readHumidity();
-  readUltrasonic();
+  delay(500);
+  readPhotoresistor();
+  delay(500);
+  //readHumidity();
+  //readUltrasonic();
 }
 
 //Função para ler o Photoresistor 
 void readPhotoresistor(){
   photoresistor_value = analogRead(photoresistor_pin); //Armazena o valor na variável 
+  Serial.println(photoresistor_value);
 }
 
 //Função para ler o sensor de temperatura BMP180
 void readTemp(){
   temperatura = bmp.readTemperature(); //Armazena o valor na variável temperatura
+  Serial.println(temperatura);
 }
 
 //Função para ligar ou desligar o LED vermelho
@@ -114,6 +120,7 @@ void readHumidity(){
     }
 
     humidity_value = temp;
+    Serial.println(humidity_value); 
 
 }
 
@@ -151,8 +158,7 @@ void readUltrasonic(){
   distance = (duration/2) / 29.1; //Distância em centímetros
 
     
-  /*Serial.print("Distância: ");
+  Serial.print("Distância: ");
   Serial.print(distance);
   Serial.println(" cm");
-  Serial.println("-----------------------------------");*/
 }

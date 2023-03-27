@@ -11,6 +11,7 @@ module tfc.plataforma.projeto_v1 {
     requires eu.hansolo.tilesfx;
     requires com.fazecast.jSerialComm;
     requires java.desktop;
+    requires java.sql;
 
     opens tfc.plataforma.projeto_v1 to javafx.fxml;
     exports tfc.plataforma.projeto_v1;
