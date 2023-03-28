@@ -24,15 +24,15 @@
       <ImageView id="img_home" fitHeight="46.0" fitWidth="43.0" layoutX="665.0" layoutY="640.0" onMouseClicked="#switchToHome" pickOnBounds="true" preserveRatio="true">
          <Image url="@../../../img/home.png" />
       </ImageView>
-      <ImageView id="img_alarme" fitHeight="44.0" fitWidth="43.0" layoutX="1145.0" layoutY="640.0" onMouseClicked="#switchToAlarms" pickOnBounds="true" preserveRatio="true">
+      <ImageView id="img_alarme" fitHeight="33.0" fitWidth="36.0" layoutX="1145.0" layoutY="640.0" onMouseClicked="#switchToAlarms" pickOnBounds="true" preserveRatio="true">
          <Image url="@../../../img/bell.png" />
       </ImageView>
-      <ImageView id="img_lista" fitHeight="33.0" fitWidth="36.0" layoutX="195.0" layoutY="640.0" onMouseClicked="#switchToList" pickOnBounds="true" preserveRatio="true">
+      <ImageView id="img_lista" fitHeight="44.0" fitWidth="43.0" layoutX="195.0" layoutY="640.0" onMouseClicked="#switchToList" pickOnBounds="true" preserveRatio="true">
          <Image url="@../../../img/list.png" />
       </ImageView>
-      <Text fill="WHITE" layoutX="147.0" layoutY="691.0" onMouseClicked="#switchToList" strokeType="OUTSIDE" strokeWidth="0.0" text="Dados Armazenados">
+      <Text fill="WHITE" layoutX="147.0" layoutY="703.0" onMouseClicked="#switchToList" strokeType="OUTSIDE" strokeWidth="0.0" text="Dados Armazenados">
          <font>
-            <Font name="System Bold" size="15.0" />
+            <Font name="System Bold" size="16.0" />
          </font>
       </Text>
       <Text fill="WHITE" layoutX="665.0" layoutY="703.0" onMouseClicked="#switchToHome" strokeType="OUTSIDE" strokeWidth="0.0" text="Home" wrappingWidth="61.125">
@@ -40,18 +40,18 @@
             <Font name="System Bold" size="16.0" />
          </font>
       </Text>
-      <Text fill="WHITE" layoutX="1136.0" layoutY="703.0" onMouseClicked="#switchToAlarms" strokeType="OUTSIDE" strokeWidth="0.0" text="Alarmes">
+      <Text fill="WHITE" layoutX="1134.0" layoutY="691.0" onMouseClicked="#switchToAlarms" strokeType="OUTSIDE" strokeWidth="0.0" text="Alarmes">
          <font>
-            <Font name="System Bold" size="16.0" />
+            <Font name="System Bold" size="15.0" />
          </font>
       </Text>
       <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#007eff" height="91.0" layoutX="-1.0" layoutY="-1.0" stroke="BLACK" strokeType="INSIDE" width="1369.0" />
-      <Text layoutX="639.0" layoutY="64.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Alarmes">
+      <Text fill="WHITE" layoutX="639.0" layoutY="64.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Alarmes">
          <font>
             <Font name="System Bold" size="48.0" />
          </font>
       </Text>
-      <Text layoutX="240.0" layoutY="219.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Níveis de gás acima do limite:">
+      <Text layoutX="240.0" layoutY="219.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Níveis de gás acima do limite:">
          <font>
             <Font size="32.0" />
          </font>
@@ -70,7 +70,7 @@
             <ToggleGroup fx:id="presenca" />
          </toggleGroup>
       </RadioButton>
-      <Text layoutX="240.0" layoutY="368.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Presença detetada:">
+      <Text layoutX="240.0" layoutY="368.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Presença detetada:">
          <font>
             <Font size="32.0" />
          </font>
@@ -89,7 +89,7 @@
             <ToggleGroup fx:id="porta" />
          </toggleGroup>
       </RadioButton>
-      <Text layoutX="240.0" layoutY="508.0"  strokeType="OUTSIDE" strokeWidth="0.0" text="Abertura de porta detetada:">
+      <Text layoutX="240.0" layoutY="508.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Abertura de porta detetada:">
          <font>
             <Font size="32.0" />
          </font>
@@ -99,6 +99,7 @@
             <Font size="17.0" />
          </font>
       </RadioButton>
+      <Separator id="separador" layoutX="1116.0" layoutY="696.0" prefHeight="0.0" prefWidth="98.0" />
       <Separator layoutX="212.0" layoutY="528.0" prefHeight="3.0" prefWidth="948.0" />
    </children>
 </AnchorPane>

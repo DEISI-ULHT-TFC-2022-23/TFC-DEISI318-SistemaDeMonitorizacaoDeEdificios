@@ -4,6 +4,8 @@ import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
 import com.fazecast.jSerialComm.SerialPortPacketListener;
 import javafx.application.Platform;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -11,17 +13,18 @@ import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-
+import java.awt.*;
 import java.sql.*;
 import java.io.IOException;
 import java.util.ArrayList;
 
 public class Controller implements SerialPortDataListener{
-    SerialPort port;
-    double temp = 0;
-    double lum = 0;
-    String buffer = "";
-    ArrayList<String> bufferData = new ArrayList<String>();
+    private SerialPort port;
+    private double temp = 0;
+    private double lum = 0;
+    private double humidade = 0;
+    private String buffer = "";
+    private ArrayList<String> bufferData = new ArrayList<String>();
 
     /**Função para conectar ao Arduino. É chamada ao carregar no botão "Conectar" na plataforma*/
     @FXML
@@ -73,7 +76,36 @@ public class Controller implements SerialPortDataListener{
         }
     }
 
+    @FXML
+    protected void updateDb() throws SQLException {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
+        String data = dtf.format(now);
+        String sql = "INSERT INTO dados(id,temperatura,humidade,luminosidade,data) "
+                + "VALUES(?,?,?,?,?)";
 
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/tfc","root","12151829");
+
+             PreparedStatement pstmt = conn.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);) {
+
+            pstmt.setString(1, null);
+            pstmt.setDouble(2, temp);
+            pstmt.setDouble(3, humidade);
+            pstmt.setDouble(4, lum);
+            pstmt.setString(5, data);
+
+
+            if(pstmt.executeUpdate() == 1)
+            {
+                System.out.println("Row Added");
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    /**Função para atualizar os dados e as labels após receber novas leituras do Arduino
+     * @param dados: lista com os dados recebidos*/
     @FXML
     protected void displayData(ArrayList<String> dados){
         if(dados.size() >= 2){
@@ -83,7 +115,7 @@ public class Controller implements SerialPortDataListener{
 
             System.out.println("Lum " + dados.get(1));
             lum = Double.parseDouble(dados.get(1));
-            //luminosidade_id.setText("Alta");
+            updateLabel(luminosidade_id,getLuminosidade(lum));
 
             dados.removeAll(dados);
         }
@@ -100,18 +132,20 @@ public class Controller implements SerialPortDataListener{
         });
     }
 
+    /**Recebe os dados de luminosidade e retorna se a luminosidade está "Alta", "Baixa" ou "Média" para
+     * disponibilizar na plataforma posteriormente
+     * @param quantidade: luminosidade obtida pelo sensor
+     * @return String com o valor a ser disponibilizado
+     */
     @FXML
-    protected void displayLuminosidade(String quantidade){
-        int number = Integer.parseInt(quantidade);
-
-        if(number <= 200){
-            luminosidade_id.setText("Baixa");
-        }else if(number> 200 && number <1000){
-            luminosidade_id.setText("Média");
+    public String getLuminosidade(Double quantidade){
+        if(quantidade <= 200){
+            return "Baixa";
+        }else if(quantidade> 201 && quantidade <1000){
+            return "Média";
         }else{
-            luminosidade_id.setText("Alta");
+            return "Alta";
         }
-
     }
 
     /**Função para enviar um sinal ao Arduino para que os Estores (servo motor) sejam acionados*/
@@ -225,6 +259,5 @@ public class Controller implements SerialPortDataListener{
     private Text humidade_id;
     @FXML
     private Text luminosidade_id;
-    @FXML
-    private Text grausCelcius;
+
 }
