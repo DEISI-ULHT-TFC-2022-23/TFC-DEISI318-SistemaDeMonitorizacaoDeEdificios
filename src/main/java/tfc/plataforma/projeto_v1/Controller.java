@@ -24,7 +24,7 @@ public class Controller implements SerialPortDataListener{
     private double lum = 0;
     private double humidade = 0;
     private String buffer = "";
-    private ArrayList<String> bufferData = new ArrayList<String>();
+    private boolean firstRead = true;
 
     /**Função para conectar ao Arduino. É chamada ao carregar no botão "Conectar" na plataforma*/
     @FXML
@@ -76,6 +76,7 @@ public class Controller implements SerialPortDataListener{
         }
     }
 
+    /**Função para inserir dados na base de dados*/
     @FXML
     protected void updateDb() throws SQLException {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
@@ -89,11 +90,10 @@ public class Controller implements SerialPortDataListener{
              PreparedStatement pstmt = conn.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);) {
 
             pstmt.setString(1, null);
-            pstmt.setDouble(2, temp);
-            pstmt.setDouble(3, humidade);
-            pstmt.setDouble(4, lum);
+            pstmt.setDouble(2, this.temp);
+            pstmt.setDouble(3, this.humidade);
+            pstmt.setDouble(4, this.lum);
             pstmt.setString(5, data);
-
 
             if(pstmt.executeUpdate() == 1)
             {
@@ -107,18 +107,48 @@ public class Controller implements SerialPortDataListener{
     /**Função para atualizar os dados e as labels após receber novas leituras do Arduino
      * @param dados: lista com os dados recebidos*/
     @FXML
-    protected void displayData(ArrayList<String> dados){
-        if(dados.size() >= 2){
-            System.out.println("Temp " + dados.get(0));
-            temp = Double.parseDouble(dados.get(0));
-            updateLabel(temp_id,dados.get(0) + "");
+    protected void displayData(String dados){
+        char tipo = 0;
+        for(int i = 0; i < dados.length(); i++){
+            if(dados.charAt(i) == 'T' || dados.charAt(i) == 'H' || dados.charAt(i) == 'L'){
+                tipo = dados.charAt(i);
+                dados = dados.substring(i);
+            }
+        }
+        dados = dados.substring(1);
+        switch (tipo) {
+            case 'T' -> {
+                System.out.println("Temp " + dados);
+                temp = Double.parseDouble(dados);
+                updateLabel(temp_id, temp + " °C");
+            }
+            case 'H' -> {
+                System.out.println("Hum " + dados);
+                humidade = Double.parseDouble(dados);
+                updateLabel(humidade_id, humidade + "%");
+            }
+            case 'L' -> {
+                System.out.println("Lum " + dados);
+                lum = Double.parseDouble(dados);
+                updateLabel(luminosidade_id, getLuminosidade(lum));
+            }
+            default -> System.out.println("Nenhum dado encontrado: " + dados);
+        }
+        /*if(dados.size() > 2){
+            System.out.println("Temp " + dados.get(2));
+            temp = Double.parseDouble(dados.get(2));
+            updateLabel(temp_id,temp + " °C");
 
             System.out.println("Lum " + dados.get(1));
             lum = Double.parseDouble(dados.get(1));
             updateLabel(luminosidade_id,getLuminosidade(lum));
 
+            System.out.println("Hum " + dados.get(0));
+            humidade = Double.parseDouble(dados.get(0));
+            updateLabel(humidade_id,humidade + "%");
+
             dados.removeAll(dados);
-        }
+        }*/
     }
 
     /**Função para atualizar o texto em um campo de texto de JavaFX
@@ -190,6 +220,9 @@ public class Controller implements SerialPortDataListener{
     @FXML
     public void switchToHome() {
         loadScene("view.fxml","Home");
+        updateLabel(temp_id,temp + " °C");
+        updateLabel(humidade_id,humidade + " °C");
+        updateLabel(luminosidade_id,getLuminosidade(lum));
     }
 
     /**Função que muda a Scene a ser mostrada ao utilizador. Recebe um nome de Ficheiro FXML e
@@ -220,14 +253,24 @@ public class Controller implements SerialPortDataListener{
     @Override
     public void serialEvent(SerialPortEvent event) {
 
-        displayData(bufferData);
+        //displayData(bufferData);
 
         byte[] newData = event.getReceivedData();
         for(byte i: newData){
             char c = (char) i;
-            if(c=='\n'){
-                bufferData.add(buffer);
-                buffer = "";
+            System.out.print(c);
+            if(c==';'){
+                //bufferData.add(buffer);
+                if(firstRead){
+                    firstRead = false;
+                    buffer = "";
+                }else if(buffer.length() > 8){
+                    System.out.println("Erro de leitura do Buffer.");
+                }else{
+                    displayData(buffer);
+                    buffer = "";
+                }
+
             }else{
                 buffer += c;
             }

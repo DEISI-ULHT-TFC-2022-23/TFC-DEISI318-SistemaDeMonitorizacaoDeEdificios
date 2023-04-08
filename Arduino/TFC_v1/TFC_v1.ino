@@ -29,6 +29,7 @@ long duration, distance; //Para medições do sensor ultrassônico
 void setup(){
   Serial.begin(9600); 
   bmp.begin(); //Inicializa sensor BMP180 
+  dht.begin();//Inicializa sensor DHT
   pinMode(redLed_pin, OUTPUT); //LED em modo output
   pinMode(photoresistor_pin, INPUT); //Photoresistor em modo Input
   pinMode(buzzer_pin, OUTPUT); //Buzzer em modo Output
@@ -73,29 +74,34 @@ void loop(){
     Serial.print("Luminosidade: ");
     Serial.print(photoresistor_value); */
     Serial.begin(9600);
-	  delay(5000);
+	delay(5000);
 }
 
 //Função para ler todos os sensores
 void readSensors(){
-  readTemp();
+  readHumidity();
   delay(500);
   readPhotoresistor();
   delay(500);
-  //readHumidity();
+  readTemp();
+  delay(500);
   //readUltrasonic();
 }
 
 //Função para ler o Photoresistor 
 void readPhotoresistor(){
   photoresistor_value = analogRead(photoresistor_pin); //Armazena o valor na variável 
-  Serial.println(photoresistor_value);
+  Serial.print("L");
+  Serial.print(photoresistor_value);
+  Serial.println(";");
 }
 
 //Função para ler o sensor de temperatura BMP180
 void readTemp(){
   temperatura = bmp.readTemperature(); //Armazena o valor na variável temperatura
-  Serial.println(temperatura);
+  Serial.print("T");
+  Serial.print(temperatura);
+  Serial.println(";");
 }
 
 //Função para ligar ou desligar o LED vermelho
@@ -114,13 +120,15 @@ void redLedToggle(){
 
 //Função para ler sensor de humidade
 void readHumidity(){
-    float temp = dht.readHumidity();
-    while(isnan(temp)){
-      temp = dht.readHumidity();
+    float hum = dht.readHumidity();
+    while(isnan(hum)){
+      hum = dht.readHumidity();
     }
 
-    humidity_value = temp;
-    Serial.println(humidity_value); 
+    humidity_value = hum;
+    Serial.print("H");
+    Serial.print(humidity_value); 
+    Serial.println(";");
 
 }
 
