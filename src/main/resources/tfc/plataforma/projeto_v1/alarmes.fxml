@@ -10,14 +10,14 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<AnchorPane fx:id="mainPane" prefHeight="600.0" prefWidth="1366.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tfc.plataforma.projeto_v1.Controller">
+<AnchorPane fx:id="mainPane" prefHeight="600.0" prefWidth="1366.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <RadioButton id="gas_on" layoutX="754.0" layoutY="195.0" mnemonicParsing="false" prefHeight="21.0" prefWidth="136.0" text="Ligado">
+      <RadioButton id="gas_on" fx:id="tempOn" layoutX="763.0" layoutY="196.0" mnemonicParsing="false" onAction="#tempAlarmOn" prefHeight="21.0" prefWidth="136.0" text="Ligado">
          <font>
             <Font size="17.0" />
          </font>
          <toggleGroup>
-            <ToggleGroup fx:id="gas_level" />
+            <ToggleGroup fx:id="tempGroup" />
          </toggleGroup>
       </RadioButton>
       <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#007eff" height="81.0" layoutX="-3.0" layoutY="630.0" stroke="BLACK" strokeType="INSIDE" width="1369.0" />
@@ -51,37 +51,37 @@
             <Font name="System Bold" size="48.0" />
          </font>
       </Text>
-      <Text layoutX="240.0" layoutY="219.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Níveis de gás acima do limite:">
+      <Text layoutX="229.0" layoutY="219.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Temperaturas Elevadas ou Muito Baixas:" wrappingWidth="501.96875">
          <font>
-            <Font size="32.0" />
+            <Font size="28.0" />
          </font>
       </Text>
-      <RadioButton id="gas_off" layoutX="897.0" layoutY="195.0" mnemonicParsing="false" prefHeight="21.0" prefWidth="136.0" selected="true" text="Desligado" toggleGroup="$gas_level">
+      <RadioButton id="gas_off" fx:id="tempOff" layoutX="906.0" layoutY="196.0" mnemonicParsing="false" onAction="#tempAlarmOff" prefHeight="21.0" prefWidth="136.0" selected="true" text="Desligado" toggleGroup="$tempGroup">
          <font>
             <Font size="17.0" />
          </font>
       </RadioButton>
       <Separator layoutX="207.0" layoutY="252.0" prefHeight="3.0" prefWidth="948.0" />
-      <RadioButton id="presenca_on" layoutX="759.0" layoutY="343.0" mnemonicParsing="false" prefHeight="21.0" prefWidth="136.0" text="Ligado">
+      <RadioButton id="presenca_on" fx:id="lumOn" layoutX="763.0" layoutY="343.0" mnemonicParsing="false" onAction="#lumAlarmOn" prefHeight="21.0" prefWidth="136.0" text="Ligado">
          <font>
             <Font size="17.0" />
          </font>
          <toggleGroup>
-            <ToggleGroup fx:id="presenca" />
+            <ToggleGroup fx:id="lumGroup" />
          </toggleGroup>
       </RadioButton>
-      <Text layoutX="240.0" layoutY="368.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Presença detetada:">
+      <Text layoutX="240.0" layoutY="368.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Luminosidade Alta:">
          <font>
-            <Font size="32.0" />
+            <Font size="28.0" />
          </font>
       </Text>
-      <RadioButton id="presenca_off" layoutX="902.0" layoutY="343.0" mnemonicParsing="false" prefHeight="21.0" prefWidth="136.0" selected="true" text="Desligado" toggleGroup="$presenca">
+      <RadioButton id="presenca_off" fx:id="lumOff" layoutX="906.0" layoutY="343.0" mnemonicParsing="false" onAction="#lumAlarmOff" prefHeight="21.0" prefWidth="136.0" selected="true" text="Desligado" toggleGroup="$lumGroup">
          <font>
             <Font size="17.0" />
          </font>
       </RadioButton>
       <Separator layoutX="212.0" layoutY="388.0" prefHeight="3.0" prefWidth="948.0" />
-      <RadioButton id="porta_on" layoutX="755.0" layoutY="483.0" mnemonicParsing="false" prefHeight="21.0" prefWidth="136.0" text="Ligado">
+      <RadioButton id="porta_on" layoutX="763.0" layoutY="483.0" mnemonicParsing="false" prefHeight="21.0" prefWidth="136.0" text="Ligado">
          <font>
             <Font size="17.0" />
          </font>
@@ -94,7 +94,7 @@
             <Font size="32.0" />
          </font>
       </Text>
-      <RadioButton id="porta_off" layoutX="898.0" layoutY="483.0" mnemonicParsing="false" prefHeight="21.0" prefWidth="136.0" selected="true" text="Desligado" toggleGroup="$porta">
+      <RadioButton id="porta_off" layoutX="906.0" layoutY="483.0" mnemonicParsing="false" prefHeight="21.0" prefWidth="136.0" selected="true" text="Desligado" toggleGroup="$porta">
          <font>
             <Font size="17.0" />
          </font>

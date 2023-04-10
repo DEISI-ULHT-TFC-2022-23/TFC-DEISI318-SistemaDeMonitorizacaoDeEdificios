@@ -10,6 +10,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -19,17 +21,19 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class Controller implements SerialPortDataListener{
-    private SerialPort port;
+    private SerialPort port = SerialPort.getCommPorts()[0];
     private double temp = 0;
     private double lum = 0;
     private double humidade = 0;
     private String buffer = "";
-    private boolean firstRead = true;
+    private boolean firstRead = true, connectedToDb = false;
+    private FXMLLoader homePage, alarmsPage, listPage;
+    private Stage stage;
+    private  Scene sceneHome, sceneAlarms, sceneList;
 
     /**Função para conectar ao Arduino. É chamada ao carregar no botão "Conectar" na plataforma*/
     @FXML
-    private void conectar() throws SQLException{
-        port = SerialPort.getCommPorts()[0];
+    private void conectar(){
         port.setComPortParameters(9600, 8, 1, 0);
         port.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 0, 0);
         if (port.openPort()){
@@ -40,7 +44,6 @@ public class Controller implements SerialPortDataListener{
         //PacketListener listener = new PacketListener();
         port.addDataListener(this);
         port.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 100, 0);
-        connectToDb();
     }
 
     /**Função para disconectar o Arduino. É chamada através do botão "Disconectar" na plataforma.*/
@@ -59,9 +62,10 @@ public class Controller implements SerialPortDataListener{
     private void connectToDb() throws SQLException{
         Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/tfc","root","12151829");
         String sql = "SELECT * FROM dados";
-
+        connectedToDb = true;
         try (conn;
              Statement stmt  = conn.createStatement();
+
              ResultSet rs    = stmt.executeQuery(sql)) {
 
             /*
@@ -134,21 +138,7 @@ public class Controller implements SerialPortDataListener{
             }
             default -> System.out.println("Nenhum dado encontrado: " + dados);
         }
-        /*if(dados.size() > 2){
-            System.out.println("Temp " + dados.get(2));
-            temp = Double.parseDouble(dados.get(2));
-            updateLabel(temp_id,temp + " °C");
 
-            System.out.println("Lum " + dados.get(1));
-            lum = Double.parseDouble(dados.get(1));
-            updateLabel(luminosidade_id,getLuminosidade(lum));
-
-            System.out.println("Hum " + dados.get(0));
-            humidade = Double.parseDouble(dados.get(0));
-            updateLabel(humidade_id,humidade + "%");
-
-            dados.removeAll(dados);
-        }*/
     }
 
     /**Função para atualizar o texto em um campo de texto de JavaFX
@@ -174,6 +164,7 @@ public class Controller implements SerialPortDataListener{
         }else if(quantidade> 201 && quantidade <1000){
             return "Média";
         }else{
+            acionarEstores();
             return "Alta";
         }
     }
@@ -195,9 +186,9 @@ public class Controller implements SerialPortDataListener{
     }
 
     /**
-    Função para enviar um sinal ao Arduino para acionar ou desligar o LED
-    Se o LED já estiver ligado, este será desligado e vice-versa
-    */
+     Função para enviar um sinal ao Arduino para acionar ou desligar o LED
+     Se o LED já estiver ligado, este será desligado e vice-versa
+     */
     @FXML
     protected void acionarLED(){
         byte[] data = "3".getBytes();
@@ -212,17 +203,17 @@ public class Controller implements SerialPortDataListener{
 
     /**Invoca a função loadScene para mudar a Scene para a página de dados*/
     @FXML
-    public void switchToList() {
+    public void switchToList() throws SQLException {
         loadScene("lista.fxml","Dados Armazenados");
+        if(!connectedToDb){
+            connectToDb();
+        }
     }
 
     /**Invoca a função loadScene para mudar a Scene para a página de dados*/
     @FXML
     public void switchToHome() {
         loadScene("view.fxml","Home");
-        updateLabel(temp_id,temp + " °C");
-        updateLabel(humidade_id,humidade + " °C");
-        updateLabel(luminosidade_id,getLuminosidade(lum));
     }
 
     /**Função que muda a Scene a ser mostrada ao utilizador. Recebe um nome de Ficheiro FXML e
@@ -232,16 +223,56 @@ public class Controller implements SerialPortDataListener{
      */
     @FXML
     private void loadScene(String fxmlFileName, String name) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFileName));
-            Parent root = loader.load();
-            Scene scene = new Scene(root);
-            Stage stage = (Stage) mainPane.getScene().getWindow();
-            stage.setTitle(name);
-            stage.setScene(scene);
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
+        FXMLLoader loader = switch (fxmlFileName) {
+            case "view.fxml" -> homePage;
+            case "lista.fxml" -> listPage;
+            default -> alarmsPage;
+        };
+
+        Scene scene = switch (fxmlFileName) {
+            case "view.fxml" -> sceneHome;
+            case "lista.fxml" -> sceneList;
+            default -> sceneAlarms;
+        };
+
+        stage.setTitle(name);
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    /**Função que envia sinal ao Arduino para acionar o alarme de Temperatura*/
+    @FXML
+    private void tempAlarmOn(){
+        byte[] data = "8".getBytes();
+        if(port != null){
+            port.writeBytes(data, data.length);
+        }
+    }
+
+    /**Função que envia sinal ao Arduino para desligar o alarme de Temperatura*/
+    @FXML
+    private void tempAlarmOff(){
+        byte[] data = "9".getBytes();
+        if(port != null){
+            port.writeBytes(data, data.length);
+        }
+    }
+
+    /**Função que envia sinal ao Arduino para acionar o alarme de Luminosidade*/
+    @FXML
+    private void lumAlarmOn(){
+        byte[] data = "10".getBytes();
+        if(port != null){
+            port.writeBytes(data, data.length);
+        }
+    }
+
+    /**Função que envia sinal ao Arduino para desligar o alarme de Luminosidade*/
+    @FXML
+    private void lumAlarmOff(){
+        byte[] data = "11".getBytes();
+        if(port != null){
+            port.writeBytes(data, data.length);
         }
     }
 
@@ -275,25 +306,33 @@ public class Controller implements SerialPortDataListener{
                 buffer += c;
             }
         }
-        /*byte[] buffer = new byte[event.getSerialPort().bytesAvailable()];
-        event.getSerialPort().readBytes(buffer, buffer.length);
-
-        try {
-            String data = new String(buffer);
-            double temp = Double.parseDouble(data.trim());
-            if(temp != 0){
-                temperature = temp;
-            }
-        } catch (NumberFormatException e) {
-
-        }
-
-        // Update the temperature label on the JavaFX Application Thread
-        Platform.runLater(() -> {
-            temp_id.setText(temperature + "°C");
-        });*/
-
     }
+
+    /**Setters para variáveis da classe Controller*/
+    public void setStage(Stage stage) {
+        this.stage = stage;
+    }
+
+    public void setHomePage(FXMLLoader loader) throws IOException {
+        this.homePage = loader;
+    }
+
+    public void setSceneHome(Scene scene){
+        this.sceneHome = scene;
+    }
+
+    public void setAlarmsPage(FXMLLoader loader) throws IOException {
+        this.alarmsPage = loader;
+        alarmsPage.setController(this);
+        this.sceneAlarms = new Scene(alarmsPage.load());
+    }
+    public void setListPage(FXMLLoader loader) throws IOException {
+        this.listPage = loader;
+        listPage.setController(this);
+        this.sceneList = new Scene(listPage.load());
+    }
+
+    /**Variáveis FXML usadas nas páginas*/
     @FXML
     private AnchorPane mainPane;
     @FXML
@@ -302,5 +341,17 @@ public class Controller implements SerialPortDataListener{
     private Text humidade_id;
     @FXML
     private Text luminosidade_id;
+    @FXML
+    private RadioButton tempOn;
+    @FXML
+    private RadioButton tempOff;
+    @FXML
+    private RadioButton lumOn;
+    @FXML
+    private RadioButton lumOff;
+    @FXML
+    private ToggleGroup tempGroup;
+    @FXML
+    private ToggleGroup lumGroup;
 
 }

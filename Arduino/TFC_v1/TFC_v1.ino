@@ -25,6 +25,9 @@ int triggerPin = 10; // Pin do trigger do sensor ultrassônico
 int echoPin = 9; //Pin do echo do sensor ultrassônico
 long duration, distance; //Para medições do sensor ultrassônico
 
+bool tempAlarm = false; //Determina se o alarme de temperatura está ativo ou não
+bool lumAlarm = false; //Determina se o alarme de luminosidade está ativo ou não
+
 
 void setup(){
   Serial.begin(9600); 
@@ -42,37 +45,64 @@ void loop(){
     readSensors();
 
     if (Serial.available()) {
-      char msg = Serial.read();
-      if (msg == '1') { //Acionar servo
-        startServo();
-        //Serial.println("Servo Acionado");
-      }else if(msg == '2'){//Acionar Buzzer
-        startBuzzer();
-        //Serial.println("Buzzer Acionado");        
-      }else if(msg == '3'){//Acionar led
-        redLedToggle();
-        //Serial.println("LED Acionado");        
-      }else if(msg == '4'){//Ler temperatura
-        readTemp();
-      }else if(msg == '5'){//Ler luminosidade
-        readPhotoresistor();
-      }else if(msg == '6'){//Ler humidade
-        readHumidity();
-      }else if(msg == '7'){//Ler sensor ultrassônico
-        readUltrasonic();
+      //char msg = Serial.read();
+      String input = Serial.readStringUntil('\n');
+      int command = input.toInt();
+      switch (command) {
+        case 1: //Acionar servo
+          startServo(); 
+          break;
+        case 2: //Acionar Buzzer
+          startBuzzer(); 
+          break;
+        case 3: //Acionar led
+          redLedToggle(); 
+          break;
+        case 4: //Ler temperatura
+          readTemp(); 
+          break;
+        case 5: //Ler luminosidade
+          readPhotoresistor(); 
+          break;
+        case 6: //Ler humidade
+          readHumidity(); 
+          break;
+        case 7: //Ler sensor ultrassônico
+          readUltrasonic(); 
+          break;
+        case 8: //Ativar alarme de Temp
+          tempAlarm = true; 
+          break;
+        case 9: //Desligar alarme de Temp
+          tempAlarm = false;
+          ledOff();
+          break;
+        case 10: //Ativar alarme de Luminosidade
+          lumAlarm = true;
+          break;
+        case 11: //Desligar alarme de Luminosidade
+          lumAlarm = false;
+          ledOff();
+          break;
+        case 12: //Ativar LED
+          ledOn();
+          break;
+        case 13: //Desligar LED
+          ledOff();
+          break;
+        default:
+          break;
       }
     }
     
-    //Serial.print("Temperatura: ");
-    //Serial.print(temperatura); 
-    /*Serial.print("°C");
-    Serial.println();
-    Serial.print("Humidade: ");
-    Serial.print(humidity_value); 
-    Serial.print("%");
-    Serial.println();
-    Serial.print("Luminosidade: ");
-    Serial.print(photoresistor_value); */
+    if(tempAlarm){
+      checkTempAlarm();      
+    }
+
+    if(lumAlarm){
+      checkLumAlarm();      
+    }
+
     Serial.begin(9600);
 	delay(5000);
 }
@@ -104,18 +134,52 @@ void readTemp(){
   Serial.println(";");
 }
 
+//Função para ligar o LED vermelho
+void ledOn(){
+  digitalWrite(redLed_pin, HIGH);   
+  redLed_state = 1;   
+}
+
+//Função para desligar o LED vermelho
+void ledOff(){
+  digitalWrite(redLed_pin, LOW);
+  redLed_state = 0;  
+}
+
 //Função para ligar ou desligar o LED vermelho
 void redLedToggle(){
 
   if(redLed_state == 0){
-    digitalWrite(redLed_pin, HIGH);   
-    redLed_state = 1; 
+    ledOn(); 
   }else{
-    digitalWrite(redLed_pin, LOW);
-    redLed_state = 0;
+    ledOff(); 
   }
 	
 
+}
+
+//Verifica se a temperatura está acima ou abaixo dos limites
+void checkTempAlarm(){
+  if(temperatura > 20.0){
+      digitalWrite(redLed_pin, HIGH);   
+      redLed_state = 1; 
+      startBuzzer();
+  }
+
+  if(temperatura < 10.0){
+      digitalWrite(redLed_pin, HIGH);   
+      redLed_state = 1; 
+      startBuzzer();
+  }
+}
+
+//Verifica se a luminosidade está acima dos limites
+void checkLumAlarm(){
+  if(photoresistor_value > 1000){
+      digitalWrite(redLed_pin, HIGH);   
+      redLed_state = 1; 
+      startBuzzer();
+  }
 }
 
 //Função para ler sensor de humidade
