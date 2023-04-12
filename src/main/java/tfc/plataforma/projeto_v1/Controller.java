@@ -30,6 +30,7 @@ public class Controller implements SerialPortDataListener{
     private FXMLLoader homePage, alarmsPage, listPage;
     private Stage stage;
     private  Scene sceneHome, sceneAlarms, sceneList;
+    private ArduinoCommands arduino = new ArduinoCommands(port);
 
     /**Função para conectar ao Arduino. É chamada ao carregar no botão "Conectar" na plataforma*/
     @FXML
@@ -58,7 +59,9 @@ public class Controller implements SerialPortDataListener{
         }
     }
 
+
     /**Função para conectar-se à base de dados*/
+    @FXML
     private void connectToDb() throws SQLException{
         Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/tfc","root","12151829");
         String sql = "SELECT * FROM dados";
@@ -164,36 +167,12 @@ public class Controller implements SerialPortDataListener{
         }else if(quantidade> 201 && quantidade <1000){
             return "Média";
         }else{
-            acionarEstores();
+            arduino.acionarEstores();
             return "Alta";
         }
     }
 
-    /**Função para enviar um sinal ao Arduino para que os Estores (servo motor) sejam acionados*/
-    @FXML
-    protected void acionarEstores(){
-        byte[] data = "4".getBytes();
-        if(port != null){
-            port.writeBytes(data, data.length);
-        }
-    }
 
-    /**Função para enviar um sinal ao Arduino para acionar o Buzzer*/
-    @FXML
-    protected void acionarBuzzer(){
-        byte[] data = "2".getBytes();
-        port.writeBytes(data, data.length);
-    }
-
-    /**
-     Função para enviar um sinal ao Arduino para acionar ou desligar o LED
-     Se o LED já estiver ligado, este será desligado e vice-versa
-     */
-    @FXML
-    protected void acionarLED(){
-        byte[] data = "3".getBytes();
-        port.writeBytes(data, data.length);
-    }
 
     /**Invoca a função loadScene para mudar a Scene para a página de alarmes*/
     @FXML
@@ -240,41 +219,7 @@ public class Controller implements SerialPortDataListener{
         stage.show();
     }
 
-    /**Função que envia sinal ao Arduino para acionar o alarme de Temperatura*/
-    @FXML
-    private void tempAlarmOn(){
-        byte[] data = "8".getBytes();
-        if(port != null){
-            port.writeBytes(data, data.length);
-        }
-    }
 
-    /**Função que envia sinal ao Arduino para desligar o alarme de Temperatura*/
-    @FXML
-    private void tempAlarmOff(){
-        byte[] data = "9".getBytes();
-        if(port != null){
-            port.writeBytes(data, data.length);
-        }
-    }
-
-    /**Função que envia sinal ao Arduino para acionar o alarme de Luminosidade*/
-    @FXML
-    private void lumAlarmOn(){
-        byte[] data = "10".getBytes();
-        if(port != null){
-            port.writeBytes(data, data.length);
-        }
-    }
-
-    /**Função que envia sinal ao Arduino para desligar o alarme de Luminosidade*/
-    @FXML
-    private void lumAlarmOff(){
-        byte[] data = "11".getBytes();
-        if(port != null){
-            port.writeBytes(data, data.length);
-        }
-    }
 
     @Override
     public int getListeningEvents() {
