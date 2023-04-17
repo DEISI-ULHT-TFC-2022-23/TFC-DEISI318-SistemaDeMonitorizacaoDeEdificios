@@ -29,6 +29,8 @@ public class Main extends Application{
             controller.setHomePage(fxmlLoader);
             controller.setAlarmsPage(alarmsPage);
             controller.setListPage(listPage);
+            controller.conectar();
+            controller.connectToDb();
         } catch (Exception e) {
             e.printStackTrace();
         }

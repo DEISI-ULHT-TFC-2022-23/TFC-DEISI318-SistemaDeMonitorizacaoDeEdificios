@@ -34,7 +34,7 @@ public class ArduinoCommands {
     }
 
     /**Função que envia sinal ao Arduino para acionar o alarme de Temperatura*/
-    private void tempAlarmOn(){
+    public void tempAlarmOn(){
         byte[] data = String.valueOf(8).getBytes();
         if(port != null){
             port.writeBytes(data, data.length);
@@ -42,7 +42,7 @@ public class ArduinoCommands {
     }
 
     /**Função que envia sinal ao Arduino para desligar o alarme de Temperatura*/
-    private void tempAlarmOff(){
+    public void tempAlarmOff(){
         byte[] data = String.valueOf(9).getBytes();
         if(port != null){
             port.writeBytes(data, data.length);
@@ -50,7 +50,7 @@ public class ArduinoCommands {
     }
 
     /**Função que envia sinal ao Arduino para acionar o alarme de Luminosidade*/
-    private void lumAlarmOn(){
+    public void lumAlarmOn(){
         byte[] data = String.valueOf(10).getBytes();
         if(port != null){
             port.writeBytes(data, data.length);
@@ -58,7 +58,7 @@ public class ArduinoCommands {
     }
 
     /**Função que envia sinal ao Arduino para desligar o alarme de Luminosidade*/
-    private void lumAlarmOff(){
+    public void lumAlarmOff(){
         byte[] data = String.valueOf(11).getBytes();
         if(port != null){
             port.writeBytes(data, data.length);

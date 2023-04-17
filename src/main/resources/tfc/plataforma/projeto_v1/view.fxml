@@ -37,15 +37,13 @@
          </font>
       </Text>
       <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#007eff" height="91.0" layoutX="-1.0" layoutY="-1.0" stroke="BLACK" strokeType="INSIDE" width="1369.0" />
-      <Button fx:id="btnDesconectar" layoutX="117.0" layoutY="44.0" mnemonicParsing="false" onAction="#disconectar" text="Disconectar" />
-      <Button fx:id="btnConectar" layoutX="29.0" layoutY="44.0" mnemonicParsing="false" onAction="#conectar" text="Conectar" />
+      <Button fx:id="btnDesconectar" layoutX="1027.0" layoutY="575.0" mnemonicParsing="false" onAction="#desconectar" prefHeight="43.0" prefWidth="88.0" text="Desconectar" />
+      <Button fx:id="btnConectar" layoutX="914.0" layoutY="575.0" mnemonicParsing="false" onAction="#conectar" prefHeight="43.0" prefWidth="88.0" text="Conectar" />
       <Text fill="WHITE" layoutX="639.0" layoutY="64.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Home">
          <font>
             <Font name="System Bold" size="48.0" />
          </font>
       </Text>
-      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="452.0" layoutX="43.0" layoutY="128.0" stroke="BLACK" strokeLineCap="ROUND" strokeType="OUTSIDE" strokeWidth="2.0" width="555.0" />
-      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="246.0" layoutX="663.0" layoutY="124.0" stroke="BLACK" strokeLineCap="ROUND" strokeType="OUTSIDE" strokeWidth="2.0" width="319.0" />
       <ImageView id="temp_icon" fitHeight="98.0" fitWidth="111.0" layoutX="195.0" layoutY="229.0" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../../../img/temperature.png" />
@@ -61,43 +59,44 @@
             <Font name="System Bold" size="48.0" />
          </font>
       </Text>
-      <ImageView fitHeight="88.0" fitWidth="78.0" layoutX="217.0" layoutY="481.0" pickOnBounds="true" preserveRatio="true">
+      <ImageView fitHeight="88.0" fitWidth="78.0" layoutX="903.0" layoutY="234.0" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../../../img/drop.png" />
          </image>
       </ImageView>
-      <Text fx:id="humidade_id" layoutX="293.0" layoutY="539.0" strokeType="OUTSIDE" strokeWidth="0.0" wrappingWidth="239.0546875">
+      <Text fx:id="humidade_id" layoutX="977.0" layoutY="292.0" strokeType="OUTSIDE" strokeWidth="0.0" wrappingWidth="239.0546875">
          <font>
             <Font name="System Bold" size="48.0" />
          </font>
       </Text>
-      <Text layoutX="108.0" layoutY="447.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Humidade Relativa:">
+      <Text layoutX="794.0" layoutY="197.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Humidade Relativa:">
          <font>
             <Font name="System Bold" size="48.0" />
          </font>
       </Text>
-      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="246.0" layoutX="1007.0" layoutY="124.0" stroke="BLACK" strokeLineCap="ROUND" strokeType="OUTSIDE" strokeWidth="2.0" width="319.0" />
-      <Text layoutX="684.0" layoutY="192.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Luminosidade:">
-         <font>
-            <Font name="System Bold" size="42.0" />
-         </font>
-      </Text>
-      <Text layoutX="1038.0" layoutY="190.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Nível de Gás:">
-         <font>
-            <Font name="System Bold" size="42.0" />
-         </font>
-      </Text>
-      <Text fx:id="luminosidade_id" layoutX="734.0" layoutY="266.0" strokeType="OUTSIDE" strokeWidth="0.0" textAlignment="CENTER" wrappingWidth="186.0546875000001">
+      <Text layoutX="162.0" layoutY="469.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Luminosidade:">
          <font>
             <Font name="System Bold" size="48.0" />
          </font>
       </Text>
-      <Text fill="#33ff00" layoutX="1090.0" layoutY="262.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Normal">
+      <Text fx:id="luminosidade_id" layoutX="233.0" layoutY="541.0" strokeType="OUTSIDE" strokeWidth="0.0" textAlignment="CENTER" wrappingWidth="186.0546875000001">
          <font>
             <Font name="System Bold" size="48.0" />
          </font>
       </Text>
-      <Button id="btnEstores" fx:id="btnEstores" layoutX="774.0" layoutY="307.0" mnemonicParsing="false" onAction="#acionarEstores" text="Acionar Estores" />
+      <Button id="btnEstores" fx:id="btnEstores" layoutX="246.0" layoutY="575.0" mnemonicParsing="false" onAction="#acionarEstores" prefHeight="43.0" prefWidth="162.0" text="Acionar Estores" />
       <Separator id="separador" layoutX="638.0" layoutY="696.0" prefHeight="0.0" prefWidth="98.0" />
+      <Text layoutX="890.0" layoutY="466.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Dispositivo:">
+         <font>
+            <Font name="System Bold" size="48.0" />
+         </font>
+      </Text>
+      <Text fx:id="dispositivo_id" layoutX="841.0" layoutY="541.0" strokeType="OUTSIDE" strokeWidth="0.0" textAlignment="CENTER" wrappingWidth="362.0546875">
+         <font>
+            <Font name="System Bold" size="42.0" />
+         </font>
+      </Text>
+      <Separator layoutX="32.0" layoutY="378.0" prefHeight="3.0" prefWidth="598.0" />
+      <Separator layoutX="737.0" layoutY="378.0" prefHeight="3.0" prefWidth="598.0" />
    </children>
 </AnchorPane>
