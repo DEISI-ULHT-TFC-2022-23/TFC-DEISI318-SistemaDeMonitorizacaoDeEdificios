@@ -1,5 +1,6 @@
 package tfc.plataforma.projeto_v1;
 
+/**Classe para armazenar dados do edifício*/
 public class BuildingData {
     private String id;
     private String data;

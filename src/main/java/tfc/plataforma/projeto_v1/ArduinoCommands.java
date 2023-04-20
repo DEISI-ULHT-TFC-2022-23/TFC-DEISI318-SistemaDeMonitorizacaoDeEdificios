@@ -3,6 +3,7 @@ package tfc.plataforma.projeto_v1;
 import com.fazecast.jSerialComm.SerialPort;
 import javafx.fxml.FXML;
 
+/**Classe para enviar commandos ao Arduino*/
 public class ArduinoCommands {
     SerialPort port;
 

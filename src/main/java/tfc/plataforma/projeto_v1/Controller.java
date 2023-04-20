@@ -44,6 +44,8 @@ public class Controller implements SerialPortDataListener{
             updateLabel(dispositivo_id, "Conectado", Color.GREEN);
         }else{
             System.out.println("Couldn't open port");
+            connectedToArduino = false;
+            updateLabel(dispositivo_id, "Desconectado", Color.RED);
         }
         //PacketListener listener = new PacketListener();
         port.addDataListener(this);
@@ -208,8 +210,8 @@ public class Controller implements SerialPortDataListener{
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
         String data = dtf.format(now);
-        String sql = "INSERT INTO dados(id,temperatura,humidade,luminosidade,data) "
-                + "VALUES(?,?,?,?,?)";
+        String sql = "INSERT INTO dados(id,temperatura,humidade,luminosidade,data,user_id) "
+                + "VALUES(?,?,?,?,?,?)";
         Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/tfc","root","12151829");
         try (conn){
 
@@ -220,6 +222,7 @@ public class Controller implements SerialPortDataListener{
             pstmt.setDouble(3, this.humidade);
             pstmt.setDouble(4, this.lum);
             pstmt.setString(5, data);
+            pstmt.setInt(6, 1);
 
             if(pstmt.executeUpdate() == 1)
             {
@@ -431,6 +434,8 @@ public class Controller implements SerialPortDataListener{
         listPage.setController(this);
         this.sceneList = new Scene(listPage.load());
     }
+    /**Fim dos setters*/
+
 
     /**Variáveis FXML usadas nas páginas*/
     @FXML

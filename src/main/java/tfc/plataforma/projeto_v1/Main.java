@@ -17,7 +17,7 @@ public class Main extends Application{
         fxmlLoader.setController(controller);
         Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
         double width = screenSize.getWidth() ;
-        double height = screenSize.getHeight() - 100;
+        double height = screenSize.getHeight();
 
         try {
             Scene scene = new Scene(fxmlLoader.load(), width, height);
