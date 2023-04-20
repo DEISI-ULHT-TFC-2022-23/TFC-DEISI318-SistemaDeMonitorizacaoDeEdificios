@@ -27,6 +27,7 @@ long duration, distance; //Para medições do sensor ultrassônico
 
 bool tempAlarm = false; //Determina se o alarme de temperatura está ativo ou não
 bool lumAlarm = false; //Determina se o alarme de luminosidade está ativo ou não
+bool portaAlarm = false; //Determina se o alarme de abertura de porta está ativo ou não
 
 
 void setup(){
@@ -90,6 +91,12 @@ void loop(){
         case 13: //Desligar LED
           ledOff();
           break;
+        case 14: //Ligar alarme de portas
+          portaAlarm = true;
+          break;
+        case 15: //Desligar alarme de portas
+          portaAlarm = false;
+          break;
         default:
           break;
       }
@@ -102,6 +109,10 @@ void loop(){
     if(lumAlarm){
       checkLumAlarm();      
     }
+
+    if(portaAlarm){
+      checkDoorAlarm();
+    }    
 
     Serial.begin(9600);
 	delay(5000);
@@ -182,6 +193,10 @@ void checkLumAlarm(){
   }
 }
 
+void checkDoorAlarm(){
+    readUltrasonic();
+}
+
 //Função para ler sensor de humidade
 void readHumidity(){
     float hum = dht.readHumidity();
@@ -230,7 +245,7 @@ void readUltrasonic(){
   distance = (duration/2) / 29.1; //Distância em centímetros
 
     
-  Serial.print("Distância: ");
+  Serial.print("D");
   Serial.print(distance);
-  Serial.println(" cm");
+  Serial.println(";");
 }
