@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.TableView?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -44,8 +46,22 @@
             </font>
         </Text>
         <Separator layoutX="140.0" layoutY="695.0" prefHeight="4.0" prefWidth="158.0" />
-        <Button fx:id="update_db_button" layoutX="603.0" layoutY="554.0" mnemonicParsing="false" onAction="#updateDb" prefHeight="54.0" prefWidth="168.0" text="Atualizar Dados" />
-      <TableView id="table" fx:id="table" layoutX="43.0" layoutY="154.0" prefHeight="367.0" prefWidth="1286.0" />
-      <Button fx:id="view_graphics" layoutX="264.0" layoutY="554.0" mnemonicParsing="false" onAction="#switchToGraphics" prefHeight="54.0" prefWidth="168.0" text="Visualizar Gráficos" />
+      <LineChart fx:id="temp_graphics" layoutX="119.0" layoutY="173.0" title="Temperatura">
+        <xAxis>
+          <CategoryAxis side="BOTTOM" />
+        </xAxis>
+        <yAxis>
+          <NumberAxis side="LEFT" />
+        </yAxis>
+      </LineChart>
+      <Button layoutX="14.0" layoutY="104.0" mnemonicParsing="false" onAction="#switchToList" prefHeight="43.0" prefWidth="132.0" text="Voltar" />
+      <LineChart fx:id="hum_graphic" layoutX="773.0" layoutY="173.0" title="Humidade">
+        <xAxis>
+          <CategoryAxis side="BOTTOM" />
+        </xAxis>
+        <yAxis>
+          <NumberAxis side="LEFT" />
+        </yAxis>
+      </LineChart>
     </children>
 </AnchorPane>

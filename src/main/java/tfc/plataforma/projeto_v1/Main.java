@@ -12,7 +12,9 @@ public class Main extends Application{
         Controller controller = new Controller();
         FXMLLoader alarmsPage = new FXMLLoader(Main.class.getResource("alarmes.fxml"));
         FXMLLoader listPage = new FXMLLoader(Main.class.getResource("lista.fxml"));
+        FXMLLoader graphicsPage = new FXMLLoader(Main.class.getResource("graficos.fxml"));
         FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("view.fxml"));
+
         //controller.conectar();
         fxmlLoader.setController(controller);
         Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
@@ -27,6 +29,7 @@ public class Main extends Application{
             controller.setStage(stage);
             controller.setSceneHome(scene);
             controller.setHomePage(fxmlLoader);
+            controller.setGraphicsPage(graphicsPage);
             controller.setAlarmsPage(alarmsPage);
             controller.setListPage(listPage);
             controller.conectar();

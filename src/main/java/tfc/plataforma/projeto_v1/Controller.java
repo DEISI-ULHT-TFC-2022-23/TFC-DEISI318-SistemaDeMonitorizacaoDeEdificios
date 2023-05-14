@@ -10,6 +10,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 import javafx.scene.Scene;
@@ -27,9 +29,9 @@ public class Controller implements SerialPortDataListener{
     private double temp = 0, lum = 0, humidade = 0;
     private String buffer = "";
     private boolean firstRead = true, connectedToDb = false, connectedToArduino = false;
-    private FXMLLoader homePage, alarmsPage, listPage;
+    private FXMLLoader homePage, alarmsPage, listPage, graphicsPage;
     private Stage stage;
-    private  Scene sceneHome, sceneAlarms, sceneList;
+    private  Scene sceneHome, sceneAlarms, sceneList, sceneGraphics;
     private final ArduinoCommands arduino = new ArduinoCommands(port);
     private ArrayList<BuildingData> dadosEdificio = new ArrayList<>();
 
@@ -73,6 +75,7 @@ public class Controller implements SerialPortDataListener{
         connectedToDb = true;
         updateList(conn);
         createTable();
+        fillGraphics();
     }
 
     /**Função para atualizar a lista de dados do edificio
@@ -96,6 +99,27 @@ public class Controller implements SerialPortDataListener{
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
         }
+    }
+
+    /**Função para preencher os gráficos de humidade e temperatura*/
+    @FXML
+    protected void fillGraphics(){
+        XYChart.Series<String, Double> tempSeries = new XYChart.Series<>();
+        XYChart.Series<String, Double> humiditySeries = new XYChart.Series<>();
+
+        tempSeries.setName("Temperatura");
+        humiditySeries.setName("Humidade");
+
+        for (BuildingData dados: dadosEdificio) {
+            tempSeries.getData().add(new XYChart.Data<String,Double>(dados.getData(),
+                    Double.parseDouble(dados.getTemp())));
+            humiditySeries.getData().add(new XYChart.Data<String,Double>(dados.getData(),
+                    Double.parseDouble(dados.getHumidade())));
+
+        }
+
+        temp_graphics.getData().add(tempSeries);
+        hum_graphic.getData().add(humiditySeries);
     }
 
     /**Função para preencher a tabela na página "Lista"*/
@@ -239,7 +263,7 @@ public class Controller implements SerialPortDataListener{
     }
 
     /**Função para atualizar os dados e as labels após receber novas leituras do Arduino
-     * @param dados: lista com os dados recebidos*/
+     * @param dados: string com os dados recebidos*/
     @FXML
     protected void displayData(String dados){
         char tipo = 0;
@@ -317,23 +341,23 @@ public class Controller implements SerialPortDataListener{
 
     /**Invoca a função loadScene para mudar a Scene para a página de dados*/
     @FXML
+    public void switchToHome() {
+        loadScene("view.fxml","Home");
+    }
+
+    /**Invoca a função loadScene para mudar a Scene para a página de gráficos*/
+    @FXML
+    public void switchToGraphics() {
+        loadScene("graficos.fxml","Gráficos");
+    }
+
+    /**Invoca a função loadScene para mudar a Scene para a página de dados*/
+    @FXML
     public void switchToList() throws SQLException {
         loadScene("lista.fxml","Dados Armazenados");
         if(!connectedToDb){
             connectToDb();
         }
-    }
-
-    /**Função para enviar um sinal ao Arduino para que os Estores (servo motor) sejam acionados*/
-    @FXML
-    public void acionarEstores(){
-        arduino.acionarEstores();
-    }
-
-    /**Invoca a função loadScene para mudar a Scene para a página de dados*/
-    @FXML
-    public void switchToHome() {
-        loadScene("view.fxml","Home");
     }
 
     /**Função que muda a Scene a ser mostrada ao utilizador. Recebe um nome de Ficheiro FXML e
@@ -343,15 +367,17 @@ public class Controller implements SerialPortDataListener{
      */
     @FXML
     private void loadScene(String fxmlFileName, String name) {
-        FXMLLoader loader = switch (fxmlFileName) {
+        FXMLLoader loader = switch (fxmlFileName) { //Definir o ficheiro fxml a carregar
             case "view.fxml" -> homePage;
             case "lista.fxml" -> listPage;
+            case "graficos.fxml" -> graphicsPage;
             default -> alarmsPage;
         };
 
-        Scene scene = switch (fxmlFileName) {
+        Scene scene = switch (fxmlFileName) { //Definir a scene correta e disponibilizar
             case "view.fxml" -> sceneHome;
             case "lista.fxml" -> sceneList;
+            case "graficos.fxml" -> sceneGraphics;
             default -> sceneAlarms;
         };
 
@@ -395,6 +421,12 @@ public class Controller implements SerialPortDataListener{
         }
     }
 
+    /**Função para enviar um sinal ao Arduino para que os Estores (servo motor) sejam acionados*/
+    @FXML
+    public void acionarEstores(){
+        arduino.acionarEstores();
+    }
+
     /**Função que envia sinal ao Arduino para acionar o alarme de Temperatura*/
     @FXML
     private void tempAlarmOn(){arduino.tempAlarmOn();}
@@ -434,6 +466,12 @@ public class Controller implements SerialPortDataListener{
         listPage.setController(this);
         this.sceneList = new Scene(listPage.load());
     }
+
+    public void setGraphicsPage(FXMLLoader loader) throws IOException {
+        this.graphicsPage = loader;
+        graphicsPage.setController(this);
+        this.sceneGraphics = new Scene(graphicsPage.load());
+    }
     /**Fim dos setters*/
 
 
@@ -462,5 +500,8 @@ public class Controller implements SerialPortDataListener{
     private ToggleGroup lumGroup;
     @FXML
     private TableView table = new TableView();
-
+    @FXML
+    private LineChart<String, Double> temp_graphics;
+    @FXML
+    private LineChart<String, Double> hum_graphic;
 }
