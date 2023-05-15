@@ -81,7 +81,7 @@
          </font>
       </RadioButton>
       <Separator layoutX="212.0" layoutY="388.0" prefHeight="3.0" prefWidth="948.0" />
-      <RadioButton id="porta_on" layoutX="763.0" layoutY="483.0" mnemonicParsing="false" prefHeight="21.0" prefWidth="136.0" text="Ligado">
+      <RadioButton id="porta_on" fx:id="doorOn" layoutX="763.0" layoutY="483.0" mnemonicParsing="false" onAction="#doorAlarmOn" prefHeight="21.0" prefWidth="136.0" text="Ligado">
          <font>
             <Font size="17.0" />
          </font>
@@ -94,7 +94,7 @@
             <Font size="32.0" />
          </font>
       </Text>
-      <RadioButton id="porta_off" layoutX="906.0" layoutY="483.0" mnemonicParsing="false" prefHeight="21.0" prefWidth="136.0" selected="true" text="Desligado" toggleGroup="$porta">
+      <RadioButton id="porta_off" fx:id="doorOff" layoutX="906.0" layoutY="483.0" mnemonicParsing="false" onAction="#doorAlarmOff" prefHeight="21.0" prefWidth="136.0" selected="true" text="Desligado" toggleGroup="$porta">
          <font>
             <Font size="17.0" />
          </font>

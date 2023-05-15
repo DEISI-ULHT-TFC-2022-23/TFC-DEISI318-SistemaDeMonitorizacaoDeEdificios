@@ -26,7 +26,7 @@ import java.util.ArrayList;
 
 public class Controller implements SerialPortDataListener{
     private final SerialPort port = SerialPort.getCommPorts()[0];
-    private double temp = 0, lum = 0, humidade = 0;
+    private double temp = 0, lum = 0, humidade = 0, dist = 0;
     private String buffer = "";
     private boolean firstRead = true, connectedToDb = false, connectedToArduino = false;
     private FXMLLoader homePage, alarmsPage, listPage, graphicsPage;
@@ -266,27 +266,30 @@ public class Controller implements SerialPortDataListener{
      * @param dados: string com os dados recebidos*/
     @FXML
     protected void displayData(String dados){
+        //Dados são enviados no formato {Tipo}{Valor}; Exemplo: T25.00; T = Temperatura e Valor = 25'
+        //Os dados podem ser do tipo T: Temperatura, H: Humidade, L: Luminosidade e D:Distância
         char tipo = 0;
         for(int i = 0; i < dados.length(); i++){
-            if(dados.charAt(i) == 'T' || dados.charAt(i) == 'H' || dados.charAt(i) == 'L'){
-                tipo = dados.charAt(i);
-                dados = dados.substring(i);
+            if(dados.charAt(i) == 'T' || dados.charAt(i) == 'H' || dados.charAt(i) == 'L' || dados.charAt(i) == 'D'){
+                //Percorre a String até encontrar um dos tipos
+                tipo = dados.charAt(i); //Separa o tipo
+                dados = dados.substring(i); //Separa os dados (restante dos valores da String até ;)
             }
         }
         dados = dados.substring(1);
         switch (tipo) {
             case 'T' -> {
-                System.out.println("Temp " + dados);
                 temp = Double.parseDouble(dados);
                 updateLabel(temp_id, temp + " °C", Color.BLACK);
             }
+            case 'D' -> {
+                dist = Double.parseDouble(dados);
+            }
             case 'H' -> {
-                System.out.println("Hum " + dados);
                 humidade = Double.parseDouble(dados);
                 updateLabel(humidade_id, humidade + "%", Color.BLACK);
             }
             case 'L' -> {
-                System.out.println("Lum " + dados);
                 lum = Double.parseDouble(dados);
                 String luminosidade = getLuminosidade(lum);
                 if(luminosidade.equals("Baixa")){
@@ -297,7 +300,7 @@ public class Controller implements SerialPortDataListener{
                     updateLabel(luminosidade_id, luminosidade, Color.RED);
                 }
             }
-            default -> System.out.println("Nenhum dado encontrado: " + dados);
+            default -> System.out.println("Nenhum dado encontrado");
         }
 
     }
@@ -421,6 +424,8 @@ public class Controller implements SerialPortDataListener{
         }
     }
 
+    /**Funções para funcionamento de alarmes*/
+
     /**Função para enviar um sinal ao Arduino para que os Estores (servo motor) sejam acionados*/
     @FXML
     public void acionarEstores(){
@@ -435,6 +440,14 @@ public class Controller implements SerialPortDataListener{
     @FXML
     private void tempAlarmOff(){arduino.tempAlarmOff();}
 
+    /**Função que envia sinal ao Arduino para acionar o alarme de Porta*/
+    @FXML
+    private void doorAlarmOn(){arduino.doorAlarmOn();}
+
+    /**Função que envia sinal ao Arduino para desligar o alarme de Porta*/
+    @FXML
+    private void doorAlarmOff(){arduino.doorAlarmOff();}
+
     /**Função que envia sinal ao Arduino para acionar o alarme de Luminosidade*/
     @FXML
     private void lumAlarmOn(){arduino.lumAlarmOn();}
@@ -442,6 +455,10 @@ public class Controller implements SerialPortDataListener{
     /**Função que envia sinal ao Arduino para desligar o alarme de Luminosidade*/
     @FXML
     private void lumAlarmOff(){arduino.lumAlarmOff();}
+
+    /**Fim das funções de alarmes*/
+
+
 
     /**Setters para variáveis da classe Controller*/
     public void setStage(Stage stage) {
@@ -494,6 +511,10 @@ public class Controller implements SerialPortDataListener{
     private RadioButton lumOn;
     @FXML
     private RadioButton lumOff;
+    @FXML
+    private RadioButton doorOn;
+    @FXML
+    private RadioButton doorOff;
     @FXML
     private ToggleGroup tempGroup;
     @FXML

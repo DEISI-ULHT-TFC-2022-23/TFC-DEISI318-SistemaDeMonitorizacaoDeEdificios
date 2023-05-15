@@ -29,8 +29,24 @@ public class ArduinoCommands {
      Função para enviar um sinal ao Arduino para acionar ou desligar o LED
      Se o LED já estiver ligado, este será desligado e vice-versa
      */
-    public void acionarLED(){
+    public void toggleLED(){
         byte[] data = String.valueOf(3).getBytes();
+        port.writeBytes(data, data.length);
+    }
+
+    /**
+     Função para enviar um sinal ao Arduino para acionar LED
+     */
+    public void acionarLED(){
+        byte[] data = String.valueOf(12).getBytes();
+        port.writeBytes(data, data.length);
+    }
+
+    /**
+     Função para enviar um sinal ao Arduino para desligar LED
+     */
+    public void desligarLED(){
+        byte[] data = String.valueOf(13).getBytes();
         port.writeBytes(data, data.length);
     }
 
@@ -61,6 +77,22 @@ public class ArduinoCommands {
     /**Função que envia sinal ao Arduino para desligar o alarme de Luminosidade*/
     public void lumAlarmOff(){
         byte[] data = String.valueOf(11).getBytes();
+        if(port != null){
+            port.writeBytes(data, data.length);
+        }
+    }
+
+    /**Função que envia sinal ao Arduino para desligar o alarme de Porta*/
+    public void doorAlarmOff(){
+        byte[] data = String.valueOf(15).getBytes();
+        if(port != null){
+            port.writeBytes(data, data.length);
+        }
+    }
+
+    /**Função que envia sinal ao Arduino para ligar o alarme de Porta*/
+    public void doorAlarmOn(){
+        byte[] data = String.valueOf(14).getBytes();
         if(port != null){
             port.writeBytes(data, data.length);
         }

@@ -23,11 +23,12 @@ int pos_inicial = 0;//Posição inicial do servo
 
 int triggerPin = 10; // Pin do trigger do sensor ultrassônico
 int echoPin = 9; //Pin do echo do sensor ultrassônico
-long duration, distance; //Para medições do sensor ultrassônico
+unsigned int distance; //Para medições do sensor ultrassônico
 
 bool tempAlarm = false; //Determina se o alarme de temperatura está ativo ou não
 bool lumAlarm = false; //Determina se o alarme de luminosidade está ativo ou não
 bool portaAlarm = false; //Determina se o alarme de abertura de porta está ativo ou não
+
 
 
 void setup(){
@@ -96,6 +97,7 @@ void loop(){
           break;
         case 15: //Desligar alarme de portas
           portaAlarm = false;
+          ledOff();
           break;
         default:
           break;
@@ -151,6 +153,12 @@ void ledOn(){
   redLed_state = 1;   
 }
 
+//Função para ligar o LED e o Buzzer
+void alarm(){
+  ledOn();
+  startBuzzer();
+}
+
 //Função para desligar o LED vermelho
 void ledOff(){
   digitalWrite(redLed_pin, LOW);
@@ -172,29 +180,29 @@ void redLedToggle(){
 //Verifica se a temperatura está acima ou abaixo dos limites
 void checkTempAlarm(){
   if(temperatura > 20.0){
-      digitalWrite(redLed_pin, HIGH);   
-      redLed_state = 1; 
-      startBuzzer();
+    alarm();
   }
 
   if(temperatura < 10.0){
-      digitalWrite(redLed_pin, HIGH);   
-      redLed_state = 1; 
-      startBuzzer();
+    alarm();
+
   }
 }
 
 //Verifica se a luminosidade está acima dos limites
 void checkLumAlarm(){
   if(photoresistor_value > 1000){
-      digitalWrite(redLed_pin, HIGH);   
-      redLed_state = 1; 
-      startBuzzer();
+    alarm();
   }
 }
 
 void checkDoorAlarm(){
     readUltrasonic();
+
+    if(distance < 5){
+      alarm();
+
+  }
 }
 
 //Função para ler sensor de humidade
@@ -239,13 +247,11 @@ void readUltrasonic(){
   delayMicroseconds(10);
   digitalWrite(triggerPin, LOW);
 
-  pinMode(echoPin, INPUT);
-  duration = pulseIn(echoPin, HIGH);  
+  long duration = pulseIn(echoPin, HIGH);
+  distance = duration / 58; //Converter para CM
 
-  distance = (duration/2) / 29.1; //Distância em centímetros
-
-    
   Serial.print("D");
   Serial.print(distance);
   Serial.println(";");
+
 }
