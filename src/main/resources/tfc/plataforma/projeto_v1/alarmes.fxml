@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
@@ -56,12 +57,12 @@
             <Font size="28.0" />
          </font>
       </Text>
-      <RadioButton id="gas_off" fx:id="tempOff" layoutX="906.0" layoutY="196.0" mnemonicParsing="false" onAction="#tempAlarmOff" prefHeight="21.0" prefWidth="136.0" selected="true" text="Desligado" toggleGroup="$tempGroup">
+      <RadioButton id="gas_off" fx:id="tempOff" layoutX="906.0" layoutY="194.0" mnemonicParsing="false" onAction="#tempAlarmOff" prefHeight="21.0" prefWidth="136.0" selected="true" text="Desligado" toggleGroup="$tempGroup">
          <font>
             <Font size="17.0" />
          </font>
       </RadioButton>
-      <Separator layoutX="207.0" layoutY="252.0" prefHeight="3.0" prefWidth="948.0" />
+      <Separator layoutX="207.0" layoutY="252.0" prefHeight="3.0" prefWidth="1015.0" />
       <RadioButton id="presenca_on" fx:id="lumOn" layoutX="763.0" layoutY="343.0" mnemonicParsing="false" onAction="#lumAlarmOn" prefHeight="21.0" prefWidth="136.0" text="Ligado">
          <font>
             <Font size="17.0" />
@@ -72,7 +73,7 @@
       </RadioButton>
       <Text layoutX="240.0" layoutY="368.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Luminosidade Alta:">
          <font>
-            <Font size="28.0" />
+            <Font size="32.0" />
          </font>
       </Text>
       <RadioButton id="presenca_off" fx:id="lumOff" layoutX="906.0" layoutY="343.0" mnemonicParsing="false" onAction="#lumAlarmOff" prefHeight="21.0" prefWidth="136.0" selected="true" text="Desligado" toggleGroup="$lumGroup">
@@ -80,7 +81,7 @@
             <Font size="17.0" />
          </font>
       </RadioButton>
-      <Separator layoutX="212.0" layoutY="388.0" prefHeight="3.0" prefWidth="948.0" />
+      <Separator layoutX="212.0" layoutY="388.0" prefHeight="3.0" prefWidth="1015.0" />
       <RadioButton id="porta_on" fx:id="doorOn" layoutX="763.0" layoutY="483.0" mnemonicParsing="false" onAction="#doorAlarmOn" prefHeight="21.0" prefWidth="136.0" text="Ligado">
          <font>
             <Font size="17.0" />
@@ -89,7 +90,7 @@
             <ToggleGroup fx:id="porta" />
          </toggleGroup>
       </RadioButton>
-      <Text layoutX="240.0" layoutY="508.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Abertura de porta detetada:">
+      <Text layoutX="240.0" layoutY="508.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Abertura de porta:">
          <font>
             <Font size="32.0" />
          </font>
@@ -100,6 +101,8 @@
          </font>
       </RadioButton>
       <Separator id="separador" layoutX="1116.0" layoutY="696.0" prefHeight="0.0" prefWidth="98.0" />
-      <Separator layoutX="212.0" layoutY="528.0" prefHeight="3.0" prefWidth="948.0" />
+      <Separator layoutX="212.0" layoutY="528.0" prefHeight="3.0" prefWidth="1015.0" />
+      <TextField fx:id="tempMin" layoutX="1050.0" layoutY="182.0" prefHeight="25.0" prefWidth="127.0" promptText="Temperatura Mínima" visible="false" />
+      <TextField fx:id="tempMax" layoutX="1050.0" layoutY="214.0" prefHeight="25.0" prefWidth="127.0" promptText="Temperatura Máxima" visible="false" />
    </children>
 </AnchorPane>

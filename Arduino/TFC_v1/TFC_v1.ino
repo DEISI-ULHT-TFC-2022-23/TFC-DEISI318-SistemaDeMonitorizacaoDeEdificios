@@ -5,6 +5,7 @@
  
 Adafruit_BMP085 bmp; //Objeto do tipo Adafruit_BMP085 para leitura do sensor BMP180
 float temperatura = 0; //Temperatura aqdquirida pelo sensor BMP180
+int tempMax = 30; int tempMin = 15; //Temperaturas enviadas pelo utiliador
 
 int photoresistor_pin = A0; // Pin do Photoresistor
 float photoresistor_value = 0; //Valor da leitura do photoresistor
@@ -99,6 +100,14 @@ void loop(){
           portaAlarm = false;
           ledOff();
           break;
+        case 16: //Receber temperatura máxima 
+          input = Serial.readStringUntil('\n');
+          tempMax = input.toInt();
+          break;
+        case 17: //Receber temperatura mínima 
+          input = Serial.readStringUntil('\n');
+          tempMin = input.toInt();
+          break;
         default:
           break;
       }
@@ -179,13 +188,15 @@ void redLedToggle(){
 
 //Verifica se a temperatura está acima ou abaixo dos limites
 void checkTempAlarm(){
-  if(temperatura > 20.0){
+  if(temperatura > tempMax){
     alarm();
   }
-
-  if(temperatura < 10.0){
+  else if(temperatura < tempMin){
     alarm();
 
+  }
+  else if(redLed_state == 1){
+    ledOff();
   }
 }
 
@@ -193,6 +204,8 @@ void checkTempAlarm(){
 void checkLumAlarm(){
   if(photoresistor_value > 1000){
     alarm();
+  }else if(redLed_state == 1){
+    ledOff();
   }
 }
 
@@ -201,7 +214,8 @@ void checkDoorAlarm(){
 
     if(distance < 5){
       alarm();
-
+    }else if(redLed_state == 1){
+    ledOff();
   }
 }
 

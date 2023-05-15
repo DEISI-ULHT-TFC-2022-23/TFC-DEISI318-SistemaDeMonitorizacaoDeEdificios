@@ -98,4 +98,28 @@ public class ArduinoCommands {
         }
     }
 
+    /**Função que enviar temperatura máxima*/
+    public void tempMax(int temp){
+        byte[] data = String.valueOf(16).getBytes();
+        if(port != null){
+            port.writeBytes(data, data.length);
+        }
+        data = String.valueOf(temp).getBytes();
+        if(port != null){
+            port.writeBytes(data, data.length);
+        }
+    }
+
+    /**Função que enviar temperatura mínima*/
+    public void tempMin(int temp){
+        byte[] data = String.valueOf(17).getBytes();
+        if(port != null){
+            port.writeBytes(data, data.length);
+        }
+        data = String.valueOf(temp).getBytes();
+        if(port != null){
+            port.writeBytes(data, data.length);
+        }
+    }
+
 }

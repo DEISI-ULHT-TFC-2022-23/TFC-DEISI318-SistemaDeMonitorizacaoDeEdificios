@@ -13,6 +13,7 @@ import javafx.scene.Parent;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
+import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
 import javafx.scene.Scene;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -75,7 +76,7 @@ public class Controller implements SerialPortDataListener{
         connectedToDb = true;
         updateList(conn);
         createTable();
-        fillGraphics();
+
     }
 
     /**Função para atualizar a lista de dados do edificio
@@ -104,11 +105,14 @@ public class Controller implements SerialPortDataListener{
     /**Função para preencher os gráficos de humidade e temperatura*/
     @FXML
     protected void fillGraphics(){
+        temp_graphics.getData().clear();
+        hum_graphic.getData().clear();
+
         XYChart.Series<String, Double> tempSeries = new XYChart.Series<>();
         XYChart.Series<String, Double> humiditySeries = new XYChart.Series<>();
 
-        tempSeries.setName("Temperatura");
-        humiditySeries.setName("Humidade");
+        tempSeries.setName("Temperatura (°C)");
+        humiditySeries.setName("Humidade (%)");
 
         for (BuildingData dados: dadosEdificio) {
             tempSeries.getData().add(new XYChart.Data<String,Double>(dados.getData(),
@@ -340,6 +344,14 @@ public class Controller implements SerialPortDataListener{
     @FXML
     public void switchToAlarms() {
         loadScene("alarmes.fxml","Alarmes");
+        tempMax.textProperty().addListener((observable, oldValue, newValue) -> {
+            // código a ser executado quando o texto do TextField mudar
+            arduino.tempMax(Integer.parseInt(newValue));
+        });
+        tempMin.textProperty().addListener((observable, oldValue, newValue) -> {
+            // código a ser executado quando o texto do TextField mudar
+            arduino.tempMin(Integer.parseInt(newValue));
+        });
     }
 
     /**Invoca a função loadScene para mudar a Scene para a página de dados*/
@@ -352,6 +364,7 @@ public class Controller implements SerialPortDataListener{
     @FXML
     public void switchToGraphics() {
         loadScene("graficos.fxml","Gráficos");
+        fillGraphics();
     }
 
     /**Invoca a função loadScene para mudar a Scene para a página de dados*/
@@ -424,21 +437,21 @@ public class Controller implements SerialPortDataListener{
         }
     }
 
-    /**Funções para funcionamento de alarmes*/
-
     /**Função para enviar um sinal ao Arduino para que os Estores (servo motor) sejam acionados*/
     @FXML
     public void acionarEstores(){
         arduino.acionarEstores();
     }
 
+    /**Funções para funcionamento de alarmes*/
+
     /**Função que envia sinal ao Arduino para acionar o alarme de Temperatura*/
     @FXML
-    private void tempAlarmOn(){arduino.tempAlarmOn();}
+    private void tempAlarmOn(){arduino.tempAlarmOn();tempMin.setVisible(true);tempMax.setVisible(true);}
 
     /**Função que envia sinal ao Arduino para desligar o alarme de Temperatura*/
     @FXML
-    private void tempAlarmOff(){arduino.tempAlarmOff();}
+    private void tempAlarmOff(){arduino.tempAlarmOff();tempMin.setVisible(false);tempMax.setVisible(false);}
 
     /**Função que envia sinal ao Arduino para acionar o alarme de Porta*/
     @FXML
@@ -496,6 +509,8 @@ public class Controller implements SerialPortDataListener{
     @FXML
     private AnchorPane mainPane;
     @FXML
+    private AnchorPane popup;
+    @FXML
     private Text temp_id;
     @FXML
     private Text humidade_id;
@@ -525,4 +540,8 @@ public class Controller implements SerialPortDataListener{
     private LineChart<String, Double> temp_graphics;
     @FXML
     private LineChart<String, Double> hum_graphic;
+    @FXML
+    private TextField tempMin;
+    @FXML
+    private TextField tempMax;
 }
