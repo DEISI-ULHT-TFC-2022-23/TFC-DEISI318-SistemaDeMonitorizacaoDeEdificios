@@ -32,8 +32,7 @@ public class Main extends Application{
             controller.setGraphicsPage(graphicsPage);
             controller.setAlarmsPage(alarmsPage);
             controller.setListPage(listPage);
-            controller.conectar();
-            controller.connectToDb();
+            controller.start();
         } catch (Exception e) {
             e.printStackTrace();
         }

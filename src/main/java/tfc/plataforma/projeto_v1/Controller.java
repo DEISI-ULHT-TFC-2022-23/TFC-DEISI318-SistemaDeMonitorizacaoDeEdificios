@@ -24,6 +24,7 @@ import java.awt.*;
 import java.sql.*;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class Controller implements SerialPortDataListener{
     private final SerialPort port = SerialPort.getCommPorts()[0];
@@ -35,6 +36,23 @@ public class Controller implements SerialPortDataListener{
     private  Scene sceneHome, sceneAlarms, sceneList, sceneGraphics;
     private final ArduinoCommands arduino = new ArduinoCommands(port);
     private ArrayList<BuildingData> dadosEdificio = new ArrayList<>();
+
+    /**Realiza ações para iniciar a aplicação*/
+    public void start() throws SQLException {
+        conectar();
+        connectToDb();
+        fillGraphics();
+
+        ordenar.getItems().addAll("Mês","Dia", "Todos os dados");
+        ordenar.setOnAction(event -> {
+            try {
+                sortGraphics((String) ordenar.getValue());
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+
+    }
 
     /**Função para conectar ao Arduino. É chamada ao carregar no botão "Conectar" na plataforma*/
     @FXML
@@ -86,16 +104,11 @@ public class Controller implements SerialPortDataListener{
         String sql = "SELECT * FROM dados";
         try (conn;
              Statement stmt  = conn.createStatement();
-
-             ResultSet rs    = stmt.executeQuery(sql)) {
-
-
-            while (rs.next()) {
-
+             ResultSet rs    = stmt.executeQuery(sql)) { //Executa a SQL query
+            while (rs.next()) { //Para cada dado recebido da query, adiciona à lista
                 dadosEdificio.add(new BuildingData(rs.getString("id"), rs.getString("data"),
                         Double.parseDouble(rs.getString("temperatura")),Double.parseDouble(rs.getString("luminosidade")),
                         Double.parseDouble(rs.getString("humidade"))));
-
             }
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
@@ -105,7 +118,41 @@ public class Controller implements SerialPortDataListener{
     /**Função para preencher os gráficos de humidade e temperatura*/
     @FXML
     protected void fillGraphics(){
-        temp_graphics.getData().clear();
+        temp_graphics.getData().clear(); //Remove os dados do gráfico
+        hum_graphic.getData().clear();
+
+        XYChart.Series<String, Double> tempSeries = new XYChart.Series<>(); //Inicializa os gráficos
+        XYChart.Series<String, Double> humiditySeries = new XYChart.Series<>();
+
+        tempSeries.setName("Temperatura (°C)");
+        humiditySeries.setName("Humidade (%)");
+
+        for (BuildingData dados: dadosEdificio) { //Para cada dado armazenado, adiciona à Series
+            tempSeries.getData().add(new XYChart.Data<String,Double>(dados.getData(),
+                    Double.parseDouble(dados.getTemp())));
+            humiditySeries.getData().add(new XYChart.Data<String,Double>(dados.getData(),
+                    Double.parseDouble(dados.getHumidade())));
+
+        }
+
+        temp_graphics.getData().add(tempSeries); //Carrega a Series no gráfico
+        hum_graphic.getData().add(humiditySeries);
+    }
+
+    /**Função para ordenar os gráficos de humidade e temperatura
+     * @param option: opção de ordenação escolhida pelo utilizador na choicebox da página de gráficos*/
+    @FXML
+    protected void sortGraphics(String option) throws SQLException {
+        ArrayList<BuildingData> data = new ArrayList<BuildingData>();
+
+        if(Objects.equals(option, "Dia") || Objects.equals(option, "Mês")){
+            data = getSortedData(option); //Recebe uma nova lista com os dados ordenados
+        }else{
+            fillGraphics(); //Se for selecionado a opção "Todos os dados", é mostrado o gráfico original
+            return;
+        }
+
+        temp_graphics.getData().clear(); //Limpa os dados dos gráficos
         hum_graphic.getData().clear();
 
         XYChart.Series<String, Double> tempSeries = new XYChart.Series<>();
@@ -114,7 +161,7 @@ public class Controller implements SerialPortDataListener{
         tempSeries.setName("Temperatura (°C)");
         humiditySeries.setName("Humidade (%)");
 
-        for (BuildingData dados: dadosEdificio) {
+        for (BuildingData dados: data) { //Adiciona os novos dados recebidos à Series
             tempSeries.getData().add(new XYChart.Data<String,Double>(dados.getData(),
                     Double.parseDouble(dados.getTemp())));
             humiditySeries.getData().add(new XYChart.Data<String,Double>(dados.getData(),
@@ -122,15 +169,46 @@ public class Controller implements SerialPortDataListener{
 
         }
 
-        temp_graphics.getData().add(tempSeries);
+        temp_graphics.getData().add(tempSeries); //Carrega a Series ao gráfico
         hum_graphic.getData().add(humiditySeries);
+    }
+
+    /**Função para obter os dados ordenados por mês ou dia
+     * @param option: opção de ordenação escolhida pelo utilizador na choicebox da página de gráficos
+     * @return lista com os dados*/
+    protected ArrayList<BuildingData> getSortedData(String option)throws SQLException {
+        ArrayList<BuildingData> data = new ArrayList<BuildingData>();
+        Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/tfc","root","12151829");
+        String sql;
+        if (option.equals("Dia")) { //Seleciona a SQL query correta para a escolha do utilizador
+            sql = "SELECT DATE(data) AS nova_data, ROUND(AVG(temperatura), 2) AS media_temperatura, ROUND(AVG(humidade), 2) as media_humidade " +
+                    "FROM dados GROUP BY nova_data ORDER BY nova_data"; //Seleciona dados, ordena por Data e faz a média
+                                                                        //de temperatura e humidade
+        } else {
+            sql = "SELECT MONTH(data) AS nova_data, ROUND(AVG(temperatura), 2) AS media_temperatura, ROUND(AVG(humidade), 2) as media_humidade " +
+                    "FROM dados GROUP BY nova_data ORDER BY nova_data";//Seleciona dados, ordena por mês e faz a média
+                                                                       //de temperatura e humidade por mês
+        }
+
+        try (conn; Statement stmt  = conn.createStatement();ResultSet rs    = stmt.executeQuery(sql)) {
+            while (rs.next()) {//Executa a query
+                data.add(new BuildingData("", rs.getString("nova_data"),
+                        Double.parseDouble(rs.getString("media_temperatura")),0,
+                        Double.parseDouble(rs.getString("media_humidade"))));
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        }
+
+        return data;//Retorna lista com os novos dados
     }
 
     /**Função para preencher a tabela na página "Lista"*/
     @FXML
     protected void createTable(){
-        TableColumn<BuildingData, String> column1 = new TableColumn<>("ID");
-        column1.setCellValueFactory(new PropertyValueFactory<>("id"));
+        //Primeiro passo é a criação das colunas da tabela
+        TableColumn<BuildingData, String> column1 = new TableColumn<>("ID"); //Nome da coluna
+        column1.setCellValueFactory(new PropertyValueFactory<>("id")); //Tipo de dado da coluna
         column1.setPrefWidth(50);
         column1.setCellFactory(column -> new TableCell<BuildingData, String>() {
             @Override
@@ -209,14 +287,14 @@ public class Controller implements SerialPortDataListener{
             }
         });
 
-
+        //Após criação das colunas, estas são adicionadas à tabela
         table.getColumns().add(column1);
         table.getColumns().add(column2);
         table.getColumns().add(column3);
         table.getColumns().add(column4);
         table.getColumns().add(column5);
 
-        fillTable(false);
+        fillTable(false);//Chama a função para preencher a tabela com os dados do ArrayList dadosEdificio
     }
 
     /**Função para preencher a tabela com dados
@@ -224,29 +302,31 @@ public class Controller implements SerialPortDataListener{
      * */
     public void fillTable(Boolean lastItemOnly){
         if(lastItemOnly){
-            table.getItems().add(dadosEdificio.get(dadosEdificio.size()-1));
+            table.getItems().add(dadosEdificio.get(dadosEdificio.size()-1)); //Armazena apenas o último valor
+                                                                             //da base de dados
         }else{
             for(int i = 0; i < dadosEdificio.size(); i++){
-                table.getItems().add(dadosEdificio.get(i));
+                table.getItems().add(dadosEdificio.get(i));//Adiciona à tabela todos os dados
             }
         }
     }
 
-    /**Função para inserir dados na base de dados*/
+    /**Função para inserir dados na base de dados. Chamada ao carregar no botão de atualizar dados na
+     * página de dados armazenados*/
     @FXML
     protected void updateDb() throws SQLException {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-        LocalDateTime now = LocalDateTime.now();
-        String data = dtf.format(now);
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"); //Define formato para data
+        LocalDateTime now = LocalDateTime.now(); //Recolhe a data e hora atual
+        String data = dtf.format(now); //Formata para String
         String sql = "INSERT INTO dados(id,temperatura,humidade,luminosidade,data,user_id) "
-                + "VALUES(?,?,?,?,?,?)";
+                + "VALUES(?,?,?,?,?,?)"; //Query para inserir novos dados na DB, cada "?" será um valor da tabela dados
         Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/tfc","root","12151829");
         try (conn){
 
              PreparedStatement pstmt = conn.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS); {
 
-            pstmt.setString(1, null);
-            pstmt.setDouble(2, this.temp);
+            pstmt.setString(1, null); //Parameter index 1 é o primeiro "?" da query
+            pstmt.setDouble(2, this.temp);//Segundo "?" da query e assim por diante...
             pstmt.setDouble(3, this.humidade);
             pstmt.setDouble(4, this.lum);
             pstmt.setString(5, data);
@@ -255,9 +335,9 @@ public class Controller implements SerialPortDataListener{
             if(pstmt.executeUpdate() == 1)
             {
                 System.out.println("Row Added");
-                dadosEdificio.clear();
-                updateList(conn);
-                fillTable(true);
+                dadosEdificio.clear(); //Limpa os dados armazenados
+                updateList(conn); //Preenche a lista com os novos dados atualizados
+                fillTable(true); //Atualiza a tabela apenas com o último valor inserido
 
             }
         }
@@ -544,4 +624,6 @@ public class Controller implements SerialPortDataListener{
     private TextField tempMin;
     @FXML
     private TextField tempMax;
+    @FXML
+    private ChoiceBox ordenar;
 }
