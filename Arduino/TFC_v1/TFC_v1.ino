@@ -190,10 +190,13 @@ void redLedToggle(){
 void checkTempAlarm(){
   if(temperatura > tempMax){
     alarm();
+    Serial.print("A1");
+    Serial.println(";");
   }
   else if(temperatura < tempMin){
     alarm();
-
+    Serial.print("A1");
+    Serial.println(";");
   }
   else if(redLed_state == 1){
     ledOff();
@@ -204,6 +207,8 @@ void checkTempAlarm(){
 void checkLumAlarm(){
   if(photoresistor_value > 1000){
     alarm();
+    Serial.print("A2");
+    Serial.println(";");
   }else if(redLed_state == 1){
     ledOff();
   }
@@ -212,8 +217,10 @@ void checkLumAlarm(){
 void checkDoorAlarm(){
     readUltrasonic();
 
-    if(distance < 5){
+    if(distance <= 5){
       alarm();
+      Serial.print("A3");
+      Serial.println(";");
     }else if(redLed_state == 1){
     ledOff();
   }

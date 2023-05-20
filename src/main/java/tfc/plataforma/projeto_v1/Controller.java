@@ -36,6 +36,7 @@ public class Controller implements SerialPortDataListener{
     private  Scene sceneHome, sceneAlarms, sceneList, sceneGraphics;
     private final ArduinoCommands arduino = new ArduinoCommands(port);
     private ArrayList<BuildingData> dadosEdificio = new ArrayList<>();
+    private Alarmes alarmes = new Alarmes();
 
     /**Realiza ações para iniciar a aplicação*/
     public void start() throws SQLException {
@@ -44,6 +45,7 @@ public class Controller implements SerialPortDataListener{
         fillGraphics();
 
         ordenar.getItems().addAll("Mês","Dia", "Todos os dados");
+        ordenar.setValue("Todos os dados");
         ordenar.setOnAction(event -> {
             try {
                 sortGraphics((String) ordenar.getValue());
@@ -53,6 +55,8 @@ public class Controller implements SerialPortDataListener{
         });
 
     }
+
+    /**Funções para funcionamento do Arduino*/
 
     /**Função para conectar ao Arduino. É chamada ao carregar no botão "Conectar" na plataforma*/
     @FXML
@@ -73,7 +77,7 @@ public class Controller implements SerialPortDataListener{
         port.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 100, 0);
     }
 
-    /**Função para desconectar o Arduino. É chamada através do botão "Disconectar" na plataforma.*/
+    /**Função para desconectar o Arduino. É chamada através do botão "Desconectar" na plataforma.*/
     @FXML
     private void desconectar(){
         port.disablePortConfiguration();
@@ -86,6 +90,113 @@ public class Controller implements SerialPortDataListener{
         }
     }
 
+    @Override
+    public int getListeningEvents() {
+        return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
+    }
+
+    /**Função para ler o Serial Port*/
+    @Override
+    public void serialEvent(SerialPortEvent event) {
+
+        //displayData(bufferData);
+
+        byte[] newData = event.getReceivedData();
+        for(byte i: newData){
+            char c = (char) i;
+            System.out.print(c);
+            if(c==';'){
+                //bufferData.add(buffer);
+                if(firstRead){
+                    firstRead = false;
+                    buffer = "";
+                }else if(buffer.length() > 9){
+                    System.out.println("Erro de leitura do Buffer.");
+                }else{
+                    displayData(buffer);
+                    buffer = "";
+                }
+
+            }else{
+                buffer += c;
+            }
+        }
+    }
+    /**Fim das funções para funcionamento do Arduino*/
+
+    /**Função para atualizar os dados e as labels após receber novas leituras do Arduino
+     * @param dados: string com os dados recebidos*/
+    @FXML
+    protected void displayData(String dados){
+        //Dados são enviados no formato {Tipo}{Valor}; Exemplo: T25.00; T = Temperatura e Valor = 25'
+        //Os dados podem ser do tipo T: Temperatura, H: Humidade, L: Luminosidade e D:Distância
+        char tipo = 0;
+        for(int i = 0; i < dados.length(); i++){
+            if(dados.charAt(i) == 'T' || dados.charAt(i) == 'H' || dados.charAt(i) == 'L' || dados.charAt(i) == 'D'){
+                //Percorre a String até encontrar um dos tipos
+                tipo = dados.charAt(i); //Separa o tipo
+                dados = dados.substring(i); //Separa os dados (restante dos valores da String até ;)
+            }
+        }
+        dados = dados.substring(1);
+        switch (tipo) {
+            case 'T' -> {
+                temp = Double.parseDouble(dados);
+                updateLabel(temp_id, temp + " °C", Color.BLACK);
+            }
+            case 'D' -> {
+                dist = Double.parseDouble(dados);
+            }
+            case 'H' -> {
+                humidade = Double.parseDouble(dados);
+                updateLabel(humidade_id, humidade + "%", Color.BLACK);
+            }
+            case 'L' -> {
+                lum = Double.parseDouble(dados);
+                String luminosidade = getLuminosidade(lum);
+                if(luminosidade.equals("Baixa")){
+                    updateLabel(luminosidade_id, luminosidade, Color.GREEN);
+                }else if(luminosidade.equals("Média")){
+                    updateLabel(luminosidade_id, luminosidade, Color.YELLOW);
+                }else{
+                    updateLabel(luminosidade_id, luminosidade, Color.RED);
+                }
+            }
+            default -> System.out.println("Nenhum dado encontrado");
+        }
+
+    }
+
+    /**Função para atualizar o texto em um campo de texto de JavaFX
+     * @param txtLabel: text label a ser atualizada
+     * @param text: novo texto da label
+     * @param color: cor do texto da label
+     * */
+    @FXML
+    protected void updateLabel(Text txtLabel, String text, Color color){
+        Platform.runLater(() -> {
+            txtLabel.setText(text);
+            txtLabel.setFill(color);
+        });
+    }
+
+    /**Recebe os dados de luminosidade e retorna se a luminosidade está "Alta", "Baixa" ou "Média" para
+     * disponibilizar na plataforma posteriormente
+     * @param quantidade: luminosidade obtida pelo sensor
+     * @return String com o valor a ser disponibilizado
+     */
+    @FXML
+    public String getLuminosidade(Double quantidade){
+        if(quantidade <= 200){
+            return "Baixa";
+        }else if(quantidade> 201 && quantidade <1000){
+            return "Média";
+        }else{
+            arduino.acionarEstores();
+            return "Alta";
+        }
+    }
+
 
     /**Função para conectar-se à base de dados*/
     @FXML
@@ -94,14 +205,98 @@ public class Controller implements SerialPortDataListener{
         connectedToDb = true;
         updateList(conn);
         createTable();
+        getAlarmesFromDB(true);
+    }
+
+    /**Função para inserir dados na base de dados. Chamada ao carregar no botão de atualizar dados na
+     * página de dados armazenados*/
+    @FXML
+    protected void updateDb() throws SQLException {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"); //Define formato para data
+        LocalDateTime now = LocalDateTime.now(); //Recolhe a data e hora atual
+        String data = dtf.format(now); //Formata para String
+        String sql = "INSERT INTO dados(id,temperatura,humidade,luminosidade,data,user_id) "
+                + "VALUES(?,?,?,?,?,?)"; //Query para inserir novos dados na DB, cada "?" será um valor da tabela dados
+        Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/tfc","root","12151829");
+        try (conn){
+
+            PreparedStatement pstmt = conn.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS); {
+
+                pstmt.setString(1, null); //Parameter index 1 é o primeiro "?" da query
+                pstmt.setDouble(2, this.temp);//Segundo "?" da query e assim por diante...
+                pstmt.setDouble(3, this.humidade);
+                pstmt.setDouble(4, this.lum);
+                pstmt.setString(5, data);
+                pstmt.setInt(6, 1);
+
+                if(pstmt.executeUpdate() == 1)
+                {
+                    System.out.println("Row Added");
+                    dadosEdificio.clear(); //Limpa os dados armazenados
+                    updateList(conn); //Preenche a lista com os novos dados atualizados
+                    fillTable(true); //Atualiza a tabela apenas com o último valor inserido
+
+                }
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    /**Função para recuperar na base de dados os alarmes que estão acionados e desligados
+     * @param ativarAlarmes: define se a função ativarAlarmes() vai ser chamada também ou não
+     */
+    public void getAlarmesFromDB(Boolean ativarAlarmes) throws SQLException {
+        Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/tfc","root","12151829");
+        String sql = "SELECT * FROM utilizadores";
+
+        try (conn;
+             Statement stmt  = conn.createStatement();
+             ResultSet rs    = stmt.executeQuery(sql)) { //Executa a SQL query
+            while (rs.next()) { //Para cada dado recebido da query, adiciona à lista
+                alarmes.setAlarmeTemp(rs.getInt("alarme1"));
+                alarmes.setAlarmeLum(rs.getInt("alarme2"));
+                alarmes.setAlarmePorta(rs.getInt("alarme3"));
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        }
+
+        if(ativarAlarmes) ativarAlarmes();
+    }
+
+    /**Função ativar os alarmes de acordo com o que está salvo na base de dados
+     */
+    public void ativarAlarmes() throws SQLException {
+
+        if(alarmes.getAlarmeTemp() == 1){
+            tempAlarmOn();
+            tempOn.setSelected(true);
+            tempOff.setSelected(false);
+        }
+
+        if(alarmes.getAlarmeLum() == 1){
+            lumAlarmOn();
+            lumOff.setSelected(false);
+            lumOn.setSelected(true);
+        }
+
+        if(alarmes.getAlarmePorta() == 1){
+            doorAlarmOn();
+            doorOn.setSelected(true);
+            doorOff.setSelected(false);
+        }
+
 
     }
+
+
 
     /**Função para atualizar a lista de dados do edificio
      * @param conn: Conexão da Base de Dados
      * */
     public void updateList(Connection conn){
-        String sql = "SELECT * FROM dados";
+        String sql = "SELECT * FROM dados WHERE user_id = 1";
         try (conn;
              Statement stmt  = conn.createStatement();
              ResultSet rs    = stmt.executeQuery(sql)) { //Executa a SQL query
@@ -185,7 +380,7 @@ public class Controller implements SerialPortDataListener{
                     "FROM dados GROUP BY nova_data ORDER BY nova_data"; //Seleciona dados, ordena por Data e faz a média
                                                                         //de temperatura e humidade
         } else {
-            sql = "SELECT MONTH(data) AS nova_data, ROUND(AVG(temperatura), 2) AS media_temperatura, ROUND(AVG(humidade), 2) as media_humidade " +
+            sql = "SELECT DATE_FORMAT(data, '%m/%Y') AS nova_data, ROUND(AVG(temperatura), 2) AS media_temperatura, ROUND(AVG(humidade), 2) as media_humidade " +
                     "FROM dados GROUP BY nova_data ORDER BY nova_data";//Seleciona dados, ordena por mês e faz a média
                                                                        //de temperatura e humidade por mês
         }
@@ -311,114 +506,6 @@ public class Controller implements SerialPortDataListener{
         }
     }
 
-    /**Função para inserir dados na base de dados. Chamada ao carregar no botão de atualizar dados na
-     * página de dados armazenados*/
-    @FXML
-    protected void updateDb() throws SQLException {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"); //Define formato para data
-        LocalDateTime now = LocalDateTime.now(); //Recolhe a data e hora atual
-        String data = dtf.format(now); //Formata para String
-        String sql = "INSERT INTO dados(id,temperatura,humidade,luminosidade,data,user_id) "
-                + "VALUES(?,?,?,?,?,?)"; //Query para inserir novos dados na DB, cada "?" será um valor da tabela dados
-        Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/tfc","root","12151829");
-        try (conn){
-
-             PreparedStatement pstmt = conn.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS); {
-
-            pstmt.setString(1, null); //Parameter index 1 é o primeiro "?" da query
-            pstmt.setDouble(2, this.temp);//Segundo "?" da query e assim por diante...
-            pstmt.setDouble(3, this.humidade);
-            pstmt.setDouble(4, this.lum);
-            pstmt.setString(5, data);
-            pstmt.setInt(6, 1);
-
-            if(pstmt.executeUpdate() == 1)
-            {
-                System.out.println("Row Added");
-                dadosEdificio.clear(); //Limpa os dados armazenados
-                updateList(conn); //Preenche a lista com os novos dados atualizados
-                fillTable(true); //Atualiza a tabela apenas com o último valor inserido
-
-            }
-        }
-        } catch (SQLException ex) {
-            System.out.println(ex.getMessage());
-        }
-    }
-
-    /**Função para atualizar os dados e as labels após receber novas leituras do Arduino
-     * @param dados: string com os dados recebidos*/
-    @FXML
-    protected void displayData(String dados){
-        //Dados são enviados no formato {Tipo}{Valor}; Exemplo: T25.00; T = Temperatura e Valor = 25'
-        //Os dados podem ser do tipo T: Temperatura, H: Humidade, L: Luminosidade e D:Distância
-        char tipo = 0;
-        for(int i = 0; i < dados.length(); i++){
-            if(dados.charAt(i) == 'T' || dados.charAt(i) == 'H' || dados.charAt(i) == 'L' || dados.charAt(i) == 'D'){
-                //Percorre a String até encontrar um dos tipos
-                tipo = dados.charAt(i); //Separa o tipo
-                dados = dados.substring(i); //Separa os dados (restante dos valores da String até ;)
-            }
-        }
-        dados = dados.substring(1);
-        switch (tipo) {
-            case 'T' -> {
-                temp = Double.parseDouble(dados);
-                updateLabel(temp_id, temp + " °C", Color.BLACK);
-            }
-            case 'D' -> {
-                dist = Double.parseDouble(dados);
-            }
-            case 'H' -> {
-                humidade = Double.parseDouble(dados);
-                updateLabel(humidade_id, humidade + "%", Color.BLACK);
-            }
-            case 'L' -> {
-                lum = Double.parseDouble(dados);
-                String luminosidade = getLuminosidade(lum);
-                if(luminosidade.equals("Baixa")){
-                    updateLabel(luminosidade_id, luminosidade, Color.GREEN);
-                }else if(luminosidade.equals("Média")){
-                    updateLabel(luminosidade_id, luminosidade, Color.YELLOW);
-                }else{
-                    updateLabel(luminosidade_id, luminosidade, Color.RED);
-                }
-            }
-            default -> System.out.println("Nenhum dado encontrado");
-        }
-
-    }
-
-    /**Função para atualizar o texto em um campo de texto de JavaFX
-     * @param txtLabel: text label a ser atualizada
-     * @param text: novo texto da label
-     * @param color: cor do texto da label
-     * */
-    @FXML
-    protected void updateLabel(Text txtLabel, String text, Color color){
-        Platform.runLater(() -> {
-            txtLabel.setText(text);
-            txtLabel.setFill(color);
-        });
-    }
-
-    /**Recebe os dados de luminosidade e retorna se a luminosidade está "Alta", "Baixa" ou "Média" para
-     * disponibilizar na plataforma posteriormente
-     * @param quantidade: luminosidade obtida pelo sensor
-     * @return String com o valor a ser disponibilizado
-     */
-    @FXML
-    public String getLuminosidade(Double quantidade){
-        if(quantidade <= 200){
-            return "Baixa";
-        }else if(quantidade> 201 && quantidade <1000){
-            return "Média";
-        }else{
-            arduino.acionarEstores();
-            return "Alta";
-        }
-    }
-
 
     /**Invoca a função loadScene para mudar a Scene para a página de alarmes*/
     @FXML
@@ -444,6 +531,7 @@ public class Controller implements SerialPortDataListener{
     @FXML
     public void switchToGraphics() {
         loadScene("graficos.fxml","Gráficos");
+        ordenar.setValue("Todos os dados");
         fillGraphics();
     }
 
@@ -482,41 +570,6 @@ public class Controller implements SerialPortDataListener{
         stage.show();
     }
 
-
-
-    @Override
-    public int getListeningEvents() {
-        return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
-    }
-
-    /**Função para ler o Serial Port*/
-    @Override
-    public void serialEvent(SerialPortEvent event) {
-
-        //displayData(bufferData);
-
-        byte[] newData = event.getReceivedData();
-        for(byte i: newData){
-            char c = (char) i;
-            System.out.print(c);
-            if(c==';'){
-                //bufferData.add(buffer);
-                if(firstRead){
-                    firstRead = false;
-                    buffer = "";
-                }else if(buffer.length() > 9){
-                    System.out.println("Erro de leitura do Buffer.");
-                }else{
-                    displayData(buffer);
-                    buffer = "";
-                }
-
-            }else{
-                buffer += c;
-            }
-        }
-    }
-
     /**Função para enviar um sinal ao Arduino para que os Estores (servo motor) sejam acionados*/
     @FXML
     public void acionarEstores(){
@@ -527,27 +580,49 @@ public class Controller implements SerialPortDataListener{
 
     /**Função que envia sinal ao Arduino para acionar o alarme de Temperatura*/
     @FXML
-    private void tempAlarmOn(){arduino.tempAlarmOn();tempMin.setVisible(true);tempMax.setVisible(true);}
+    private void tempAlarmOn() throws SQLException {
+        arduino.tempAlarmOn();
+        tempMin.setVisible(true);
+        tempMax.setVisible(true);
+        alarmes.updateAlarm(1, 1);
+    }
 
     /**Função que envia sinal ao Arduino para desligar o alarme de Temperatura*/
     @FXML
-    private void tempAlarmOff(){arduino.tempAlarmOff();tempMin.setVisible(false);tempMax.setVisible(false);}
+    private void tempAlarmOff()throws SQLException{
+        arduino.tempAlarmOff();
+        tempMin.setVisible(false);
+        tempMax.setVisible(false);
+        alarmes.updateAlarm(1, 0);
+    }
 
     /**Função que envia sinal ao Arduino para acionar o alarme de Porta*/
     @FXML
-    private void doorAlarmOn(){arduino.doorAlarmOn();}
+    private void doorAlarmOn()throws SQLException{
+        arduino.doorAlarmOn();
+        alarmes.updateAlarm(3, 1);
+    }
 
     /**Função que envia sinal ao Arduino para desligar o alarme de Porta*/
     @FXML
-    private void doorAlarmOff(){arduino.doorAlarmOff();}
+    private void doorAlarmOff()throws SQLException{
+        arduino.doorAlarmOff();
+        alarmes.updateAlarm(3, 0);
+    }
 
     /**Função que envia sinal ao Arduino para acionar o alarme de Luminosidade*/
     @FXML
-    private void lumAlarmOn(){arduino.lumAlarmOn();}
+    private void lumAlarmOn()throws SQLException{
+        arduino.lumAlarmOn();
+        alarmes.updateAlarm(2, 1);
+    }
 
     /**Função que envia sinal ao Arduino para desligar o alarme de Luminosidade*/
     @FXML
-    private void lumAlarmOff(){arduino.lumAlarmOff();}
+    private void lumAlarmOff()throws SQLException{
+        arduino.lumAlarmOff();
+        alarmes.updateAlarm(2, 0);
+    }
 
     /**Fim das funções de alarmes*/
 

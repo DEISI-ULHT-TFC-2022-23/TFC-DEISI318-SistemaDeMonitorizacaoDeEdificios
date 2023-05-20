@@ -49,19 +49,19 @@
         <Separator layoutX="140.0" layoutY="695.0" prefHeight="4.0" prefWidth="158.0" />
       <LineChart fx:id="temp_graphics" layoutX="119.0" layoutY="173.0" title="Temperatura">
         <xAxis>
-          <CategoryAxis side="BOTTOM" />
+          <CategoryAxis animated="false" label="Data" side="BOTTOM" />
         </xAxis>
         <yAxis>
-          <NumberAxis side="LEFT" />
+          <NumberAxis animated="false" label="Valor (°C)" side="LEFT" />
         </yAxis>
       </LineChart>
       <Button layoutX="14.0" layoutY="104.0" mnemonicParsing="false" onAction="#switchToList" prefHeight="43.0" prefWidth="132.0" text="Voltar" />
       <LineChart fx:id="hum_graphic" layoutX="773.0" layoutY="173.0" title="Humidade">
         <xAxis>
-          <CategoryAxis side="BOTTOM" />
+          <CategoryAxis animated="false" label="Data" />
         </xAxis>
         <yAxis>
-          <NumberAxis side="LEFT" />
+          <NumberAxis animated="false" label="Valor (%)" side="LEFT" />
         </yAxis>
       </LineChart>
       <ChoiceBox fx:id="ordenar" layoutX="621.0" layoutY="135.0" prefWidth="150.0" />
