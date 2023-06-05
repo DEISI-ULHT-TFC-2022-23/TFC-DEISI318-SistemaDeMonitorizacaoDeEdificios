@@ -5,7 +5,7 @@
  
 Adafruit_BMP085 bmp; //Objeto do tipo Adafruit_BMP085 para leitura do sensor BMP180
 float temperatura = 0; //Temperatura aqdquirida pelo sensor BMP180
-int tempMax = 30; int tempMin = 15; //Temperaturas enviadas pelo utiliador
+int tempMax = 25; int tempMin = 15; //Temperaturas enviadas pelo utiliador
 
 int photoresistor_pin = A0; // Pin do Photoresistor
 float photoresistor_value = 0; //Valor da leitura do photoresistor
@@ -44,90 +44,94 @@ void setup(){
   pinMode(echoPin, INPUT); //Pin echo em modo input
 }
    
-void loop(){
-    readSensors();
+void loop() {
+  readSensors();
 
-    if (Serial.available()) {
-      //char msg = Serial.read();
-      String input = Serial.readStringUntil('\n');
-      int command = input.toInt();
-      switch (command) {
-        case 1: //Acionar servo
-          startServo(); 
+  if (Serial.available()) {
+    String mensagem = Serial.readStringUntil('\n');
+    int index = mensagem.indexOf(':');
+    if (index != -1) {
+      int comando = mensagem.substring(0, index).toInt();
+      int valor = mensagem.substring(index + 1).toInt();
+      switch (comando) {
+        case 1: // Acionar servo
+          startServo();
           break;
-        case 2: //Acionar Buzzer
-          startBuzzer(); 
+        case 2: // Acionar Buzzer
+          startBuzzer();
           break;
-        case 3: //Acionar led
-          redLedToggle(); 
+        case 3: // Acionar led
+          redLedToggle();
           break;
-        case 4: //Ler temperatura
-          readTemp(); 
+        case 4: // Ler temperatura
+          readTemp();
           break;
-        case 5: //Ler luminosidade
-          readPhotoresistor(); 
+        case 5: // Ler luminosidade
+          readPhotoresistor();
           break;
-        case 6: //Ler humidade
-          readHumidity(); 
+        case 6: // Ler humidade
+          readHumidity();
           break;
-        case 7: //Ler sensor ultrassônico
-          readUltrasonic(); 
+        case 7: // Ler sensor ultrassônico
+          readUltrasonic();
           break;
-        case 8: //Ativar alarme de Temp
-          tempAlarm = true; 
+        case 8: // Ativar alarme de Temp
+          tempAlarm = true;
           break;
-        case 9: //Desligar alarme de Temp
+        case 9: // Desligar alarme de Temp
           tempAlarm = false;
           ledOff();
           break;
-        case 10: //Ativar alarme de Luminosidade
+        case 10: // Ativar alarme de Luminosidade
           lumAlarm = true;
           break;
-        case 11: //Desligar alarme de Luminosidade
+        case 11: // Desligar alarme de Luminosidade
           lumAlarm = false;
           ledOff();
           break;
-        case 12: //Ativar LED
+        case 12: // Ativar LED
           ledOn();
           break;
-        case 13: //Desligar LED
+        case 13: // Desligar LED
           ledOff();
           break;
-        case 14: //Ligar alarme de portas
+        case 14: // Ligar alarme de portas
           portaAlarm = true;
           break;
-        case 15: //Desligar alarme de portas
+        case 15: // Desligar alarme de portas
           portaAlarm = false;
           ledOff();
           break;
-        case 16: //Receber temperatura máxima 
-          input = Serial.readStringUntil('\n');
-          tempMax = input.toInt();
+        case 16: // Receber temperatura máxima
+          tempMax = valor;
           break;
-        case 17: //Receber temperatura mínima 
-          input = Serial.readStringUntil('\n');
-          tempMin = input.toInt();
+        case 17: // Receber temperatura mínima
+          tempMin = valor;
+          break;
+        case 18: // Ativar alarme
+          alarm();
           break;
         default:
           break;
       }
     }
-    
-    if(tempAlarm){
-      checkTempAlarm();      
-    }
+  }
+  
+  if (tempAlarm) {
+    checkTempAlarm();
+  }
 
-    if(lumAlarm){
-      checkLumAlarm();      
-    }
+  if (lumAlarm) {
+    checkLumAlarm();
+  }
 
-    if(portaAlarm){
-      checkDoorAlarm();
-    }    
+  if (portaAlarm) {
+    checkDoorAlarm();
+  }    
 
-    Serial.begin(9600);
-	delay(5000);
+  delay(3000);
 }
+
 
 //Função para ler todos os sensores
 void readSensors(){

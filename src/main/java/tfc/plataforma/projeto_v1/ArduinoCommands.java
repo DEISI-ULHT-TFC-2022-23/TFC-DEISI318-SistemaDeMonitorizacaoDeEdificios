@@ -13,16 +13,20 @@ public class ArduinoCommands {
 
     /**Função para enviar um sinal ao Arduino para que os Estores (servo motor) sejam acionados*/
     public void acionarEstores(){
-        byte[] data = String.valueOf(1).getBytes();
         if(port != null){
+            String command = "1:" + "\n";
+            byte[] data = command.getBytes();
             port.writeBytes(data, data.length);
         }
     }
 
     /**Função para enviar um sinal ao Arduino para acionar o Buzzer*/
     public void acionarBuzzer(){
-        byte[] data = String.valueOf(2).getBytes();
-        port.writeBytes(data, data.length);
+        if(port != null){
+            String command = "2:" + "\n";
+            byte[] data = command.getBytes();
+            port.writeBytes(data, data.length);
+        }
     }
 
     /**
@@ -30,94 +34,114 @@ public class ArduinoCommands {
      Se o LED já estiver ligado, este será desligado e vice-versa
      */
     public void toggleLED(){
-        byte[] data = String.valueOf(3).getBytes();
-        port.writeBytes(data, data.length);
+        if(port != null){
+            String command = "3:" + "\n";
+            byte[] data = command.getBytes();
+            port.writeBytes(data, data.length);
+        }
     }
 
     /**
      Função para enviar um sinal ao Arduino para acionar LED
      */
     public void acionarLED(){
-        byte[] data = String.valueOf(12).getBytes();
-        port.writeBytes(data, data.length);
+        if(port != null){
+            String command = "12:" + "\n";
+            byte[] data = command.getBytes();
+            port.writeBytes(data, data.length);
+        }
     }
 
     /**
      Função para enviar um sinal ao Arduino para desligar LED
      */
     public void desligarLED(){
-        byte[] data = String.valueOf(13).getBytes();
-        port.writeBytes(data, data.length);
+        if(port != null){
+            String command = "13:" + "\n";
+            byte[] data = command.getBytes();
+            port.writeBytes(data, data.length);
+        }
     }
 
     /**Função que envia sinal ao Arduino para acionar o alarme de Temperatura*/
     public void tempAlarmOn(){
-        byte[] data = String.valueOf(8).getBytes();
         if(port != null){
+            String command = "8:" + "\n";
+            byte[] data = command.getBytes();
             port.writeBytes(data, data.length);
         }
     }
 
     /**Função que envia sinal ao Arduino para desligar o alarme de Temperatura*/
     public void tempAlarmOff(){
-        byte[] data = String.valueOf(9).getBytes();
         if(port != null){
+            String command = "9:" + "\n";
+            byte[] data = command.getBytes();
             port.writeBytes(data, data.length);
         }
     }
 
     /**Função que envia sinal ao Arduino para acionar o alarme de Luminosidade*/
     public void lumAlarmOn(){
-        byte[] data = String.valueOf(10).getBytes();
         if(port != null){
+            String command = "10:" + "\n";
+            byte[] data = command.getBytes();
             port.writeBytes(data, data.length);
         }
     }
 
     /**Função que envia sinal ao Arduino para desligar o alarme de Luminosidade*/
     public void lumAlarmOff(){
-        byte[] data = String.valueOf(11).getBytes();
         if(port != null){
+            String command = "11:" + "\n";
+            byte[] data = command.getBytes();
             port.writeBytes(data, data.length);
         }
     }
 
     /**Função que envia sinal ao Arduino para desligar o alarme de Porta*/
     public void doorAlarmOff(){
-        byte[] data = String.valueOf(15).getBytes();
         if(port != null){
+            String command = "15:" + "\n";
+            byte[] data = command.getBytes();
             port.writeBytes(data, data.length);
         }
     }
 
     /**Função que envia sinal ao Arduino para ligar o alarme de Porta*/
     public void doorAlarmOn(){
-        byte[] data = String.valueOf(14).getBytes();
         if(port != null){
+            String command = "14:" + "\n";
+            byte[] data = command.getBytes();
             port.writeBytes(data, data.length);
         }
     }
 
-    /**Função que enviar temperatura máxima*/
-    public void tempMax(int temp){
-        byte[] data = String.valueOf(16).getBytes();
-        if(port != null){
-            port.writeBytes(data, data.length);
-        }
-        data = String.valueOf(temp).getBytes();
-        if(port != null){
+    /** Função que enviar temperatura máxima */
+    public void tempMax(int temp) {
+        if (port != null) {
+            String command = "16:" + temp + "\n";
+            byte[] data = command.getBytes();
             port.writeBytes(data, data.length);
         }
     }
+
+
 
     /**Função que enviar temperatura mínima*/
     public void tempMin(int temp){
-        byte[] data = String.valueOf(17).getBytes();
-        if(port != null){
+        if (port != null) {
+            String command = "17:" + temp + "\n";
+            byte[] data = command.getBytes();
             port.writeBytes(data, data.length);
         }
-        data = String.valueOf(temp).getBytes();
+    }
+
+    /**Função que envia sinal ao Arduino para ligar o alarme genérico (aciona buzzer e led)*/
+    public void alarm(){
         if(port != null){
+            String command = "18:" + "\n";
+            byte[] data = command.getBytes();
             port.writeBytes(data, data.length);
         }
     }

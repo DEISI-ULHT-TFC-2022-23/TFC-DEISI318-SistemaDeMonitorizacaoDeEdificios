@@ -1,4 +1,8 @@
 package tfc.plataforma.projeto_v1;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
@@ -13,6 +17,7 @@ import javafx.scene.Parent;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
 import javafx.scene.Scene;
@@ -52,6 +57,12 @@ public class Controller implements SerialPortDataListener{
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+        });
+
+        periodo.getItems().addAll("Desligado","Diariamente");
+        periodo.setValue("Desligado");
+        periodo.setOnAction(event -> {
+            setPeriodo((String) periodo.getValue());
         });
 
     }
@@ -131,8 +142,10 @@ public class Controller implements SerialPortDataListener{
         //Dados são enviados no formato {Tipo}{Valor}; Exemplo: T25.00; T = Temperatura e Valor = 25'
         //Os dados podem ser do tipo T: Temperatura, H: Humidade, L: Luminosidade e D:Distância
         char tipo = 0;
+        int alarmeTipo;
         for(int i = 0; i < dados.length(); i++){
-            if(dados.charAt(i) == 'T' || dados.charAt(i) == 'H' || dados.charAt(i) == 'L' || dados.charAt(i) == 'D'){
+            if(dados.charAt(i) == 'T' || dados.charAt(i) == 'H' || dados.charAt(i) == 'L' || dados.charAt(i) == 'D'
+            || dados.charAt(i) == 'A'){
                 //Percorre a String até encontrar um dos tipos
                 tipo = dados.charAt(i); //Separa o tipo
                 dados = dados.substring(i); //Separa os dados (restante dos valores da String até ;)
@@ -161,6 +174,9 @@ public class Controller implements SerialPortDataListener{
                 }else{
                     updateLabel(luminosidade_id, luminosidade, Color.RED);
                 }
+            }
+            case 'A' -> {
+                alarmeTipo = Integer.parseInt(dados);
             }
             default -> System.out.println("Nenhum dado encontrado");
         }
@@ -506,19 +522,46 @@ public class Controller implements SerialPortDataListener{
         }
     }
 
+    /**Função para estabelecer período de coleta automática de dados
+     * @param periodo: escolhido pelo utilizador na ChoiceBox da página de Dados Armazenados
+     * */
+    public void setPeriodo(String periodo){
+        if(periodo == "Diariamente"){
+            Timer timer = new Timer();
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.HOUR_OF_DAY, 20);
+            calendar.set(Calendar.MINUTE, 10);
+            calendar.set(Calendar.SECOND, 0);
+
+            Date firstExecution = calendar.getTime();
+
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    // Chamar a função updateDb() para enviar os dados à base de dados
+                    try {
+                        updateDb();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    // Reagendar a tarefa para o próximo dia
+                    calendar.add(Calendar.DAY_OF_YEAR, 1); // Adicionar 1 dia ao calendário
+                    Date nextExecution = calendar.getTime();
+                    timer.schedule(this, nextExecution);
+                }
+            }, firstExecution);
+        }
+
+
+    }
+
+
 
     /**Invoca a função loadScene para mudar a Scene para a página de alarmes*/
     @FXML
     public void switchToAlarms() {
         loadScene("alarmes.fxml","Alarmes");
-        tempMax.textProperty().addListener((observable, oldValue, newValue) -> {
-            // código a ser executado quando o texto do TextField mudar
-            arduino.tempMax(Integer.parseInt(newValue));
-        });
-        tempMin.textProperty().addListener((observable, oldValue, newValue) -> {
-            // código a ser executado quando o texto do TextField mudar
-            arduino.tempMin(Integer.parseInt(newValue));
-        });
     }
 
     /**Invoca a função loadScene para mudar a Scene para a página de dados*/
@@ -584,6 +627,7 @@ public class Controller implements SerialPortDataListener{
         arduino.tempAlarmOn();
         tempMin.setVisible(true);
         tempMax.setVisible(true);
+        confirmTemp.setVisible(true);
         alarmes.updateAlarm(1, 1);
     }
 
@@ -593,6 +637,7 @@ public class Controller implements SerialPortDataListener{
         arduino.tempAlarmOff();
         tempMin.setVisible(false);
         tempMax.setVisible(false);
+        confirmTemp.setVisible(false);
         alarmes.updateAlarm(1, 0);
     }
 
@@ -622,6 +667,23 @@ public class Controller implements SerialPortDataListener{
     private void lumAlarmOff()throws SQLException{
         arduino.lumAlarmOff();
         alarmes.updateAlarm(2, 0);
+    }
+
+    /**Função que envia as temperaturas mínimas e máximas colocadas pelo utilizador*/
+    @FXML
+    private void enviarTemperaturas(){
+        String max = tempMax.getText();
+        String min = tempMin.getText();
+
+        if(max != null && !max.equals("")){
+            arduino.tempMax(Integer.parseInt(max));
+            tempMax.clear();
+        }
+
+        if(min != null && !min.equals("")){
+            arduino.tempMin(Integer.parseInt(min));
+            tempMin.clear();
+        }
     }
 
     /**Fim das funções de alarmes*/
@@ -700,5 +762,9 @@ public class Controller implements SerialPortDataListener{
     @FXML
     private TextField tempMax;
     @FXML
+    private Button confirmTemp;
+    @FXML
     private ChoiceBox ordenar;
+    @FXML
+    private ChoiceBox periodo;
 }
