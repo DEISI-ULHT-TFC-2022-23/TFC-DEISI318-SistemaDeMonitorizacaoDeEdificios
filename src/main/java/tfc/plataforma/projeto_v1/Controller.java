@@ -30,40 +30,54 @@ import java.sql.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.stream.IntStream;
 
 public class Controller implements SerialPortDataListener{
     private final SerialPort port = SerialPort.getCommPorts()[0];
     private double temp = 0, lum = 0, humidade = 0, dist = 0;
     private String buffer = "";
-    private boolean firstRead = true, connectedToDb = false, connectedToArduino = false;
+    private boolean firstRead = true, connectedToDb = false, connectedToArduino = false, coletaAutomatica = false;
     private FXMLLoader homePage, alarmsPage, listPage, graphicsPage;
     private Stage stage;
     private  Scene sceneHome, sceneAlarms, sceneList, sceneGraphics;
     private final ArduinoCommands arduino = new ArduinoCommands(port);
     private ArrayList<BuildingData> dadosEdificio = new ArrayList<>();
     private Alarmes alarmes = new Alarmes();
+    private Timer timer;
 
     /**Realiza ações para iniciar a aplicação*/
     public void start() throws SQLException {
+        this.timer = null;
+
         conectar();
         connectToDb();
         fillGraphics();
 
-        ordenar.getItems().addAll("Mês","Dia", "Todos os dados");
-        ordenar.setValue("Todos os dados");
-        ordenar.setOnAction(event -> {
+        ano.getItems().addAll("2023");
+        ano.setValue("2023");
+
+        String[] meses = {"Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"};
+        mes.getItems().addAll("Não Especificar");
+        mes.getItems().addAll(meses);
+        mes.setOnAction(event -> {
             try {
-                sortGraphics((String) ordenar.getValue());
+                sortGraphics((String) dia.getValue(),(String) mes.getValue());
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         });
 
-        periodo.getItems().addAll("Desligado","Diariamente");
-        periodo.setValue("Desligado");
-        periodo.setOnAction(event -> {
-            setPeriodo((String) periodo.getValue());
+        dia.getItems().addAll("Não Especificar");
+        dia.getItems().addAll(IntStream.rangeClosed(1, 31).mapToObj(String::valueOf).toArray(String[]::new));
+
+        dia.setOnAction(event -> {
+            try {
+                sortGraphics((String) dia.getValue(),(String) mes.getValue());
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         });
+
 
     }
 
@@ -273,6 +287,7 @@ public class Controller implements SerialPortDataListener{
                 alarmes.setAlarmeTemp(rs.getInt("alarme1"));
                 alarmes.setAlarmeLum(rs.getInt("alarme2"));
                 alarmes.setAlarmePorta(rs.getInt("alarme3"));
+                coletaAutomatica = rs.getBoolean("coletaAutomatica");
             }
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
@@ -303,6 +318,11 @@ public class Controller implements SerialPortDataListener{
             doorOff.setSelected(false);
         }
 
+        if(coletaAutomatica){
+            setPeriodo();
+            periodoOn.setSelected(true);
+            periodoOff.setSelected(false);
+        }
 
     }
 
@@ -339,6 +359,7 @@ public class Controller implements SerialPortDataListener{
         humiditySeries.setName("Humidade (%)");
 
         for (BuildingData dados: dadosEdificio) { //Para cada dado armazenado, adiciona à Series
+
             tempSeries.getData().add(new XYChart.Data<String,Double>(dados.getData(),
                     Double.parseDouble(dados.getTemp())));
             humiditySeries.getData().add(new XYChart.Data<String,Double>(dados.getData(),
@@ -348,19 +369,44 @@ public class Controller implements SerialPortDataListener{
 
         temp_graphics.getData().add(tempSeries); //Carrega a Series no gráfico
         hum_graphic.getData().add(humiditySeries);
+
+        temp_graphics.getXAxis().setTickLabelsVisible(false);
+        hum_graphic.getXAxis().setTickLabelsVisible(false);
     }
 
     /**Função para ordenar os gráficos de humidade e temperatura
-     * @param option: opção de ordenação escolhida pelo utilizador na choicebox da página de gráficos*/
+     * @param dia: dia escolhido para disponibilizar nos gráficos
+     * @param mes: mês escolhido para disponibilizar nos gráficos*/
     @FXML
-    protected void sortGraphics(String option) throws SQLException {
-        ArrayList<BuildingData> data = new ArrayList<BuildingData>();
+    protected void sortGraphics(String dia, String mes) throws SQLException {
+        ArrayList<BuildingData> dados = new ArrayList<BuildingData>();
+        String sql = "", data ="";
+        String[] meses = {"Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"};
+        int mesNum = 0;
 
-        if(Objects.equals(option, "Dia") || Objects.equals(option, "Mês")){
-            data = getSortedData(option); //Recebe uma nova lista com os dados ordenados
-        }else{
-            fillGraphics(); //Se for selecionado a opção "Todos os dados", é mostrado o gráfico original
+        if(mes == null){return;}
+
+        if(dia != null && dia.equals("Não Especificar") && mes.equals("Não Especificar")){
+            fillGraphics();
             return;
+        }
+
+        if (!mes.equals("")) {
+            for (int i = 0; i < meses.length; i++) {
+                if (mes.equals(meses[i])) {
+                    mesNum = i + 1;
+                }
+            }
+            if (dia == null || dia.equals("Não Especificar")) {
+                sql = "SELECT *" +
+                        " FROM dados" +
+                        " WHERE MONTH(data) = " + mesNum + " AND YEAR(data) = 2023";
+                dados = getSortedData(sql); // Recebe uma nova lista com os dados
+            }else{
+                data = "2023-" + mesNum + "-" + dia;
+                sql = "SELECT * FROM dados WHERE DATE(data) = '"+data+"'";
+                dados = getSortedData(sql); // Recebe uma nova lista com os dados
+            }
         }
 
         temp_graphics.getData().clear(); //Limpa os dados dos gráficos
@@ -372,11 +418,11 @@ public class Controller implements SerialPortDataListener{
         tempSeries.setName("Temperatura (°C)");
         humiditySeries.setName("Humidade (%)");
 
-        for (BuildingData dados: data) { //Adiciona os novos dados recebidos à Series
-            tempSeries.getData().add(new XYChart.Data<String,Double>(dados.getData(),
-                    Double.parseDouble(dados.getTemp())));
-            humiditySeries.getData().add(new XYChart.Data<String,Double>(dados.getData(),
-                    Double.parseDouble(dados.getHumidade())));
+        for (BuildingData d: dados) { //Adiciona os novos dados recebidos à Series
+            tempSeries.getData().add(new XYChart.Data<String,Double>(d.getData(),
+                    Double.parseDouble(d.getTemp())));
+            humiditySeries.getData().add(new XYChart.Data<String,Double>(d.getData(),
+                    Double.parseDouble(d.getHumidade())));
 
         }
 
@@ -385,27 +431,17 @@ public class Controller implements SerialPortDataListener{
     }
 
     /**Função para obter os dados ordenados por mês ou dia
-     * @param option: opção de ordenação escolhida pelo utilizador na choicebox da página de gráficos
+     * @param sql: query a ser executada
      * @return lista com os dados*/
-    protected ArrayList<BuildingData> getSortedData(String option)throws SQLException {
+    protected ArrayList<BuildingData> getSortedData(String sql)throws SQLException {
         ArrayList<BuildingData> data = new ArrayList<BuildingData>();
         Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/tfc","root","12151829");
-        String sql;
-        if (option.equals("Dia")) { //Seleciona a SQL query correta para a escolha do utilizador
-            sql = "SELECT DATE(data) AS nova_data, ROUND(AVG(temperatura), 2) AS media_temperatura, ROUND(AVG(humidade), 2) as media_humidade " +
-                    "FROM dados GROUP BY nova_data ORDER BY nova_data"; //Seleciona dados, ordena por Data e faz a média
-                                                                        //de temperatura e humidade
-        } else {
-            sql = "SELECT DATE_FORMAT(data, '%m/%Y') AS nova_data, ROUND(AVG(temperatura), 2) AS media_temperatura, ROUND(AVG(humidade), 2) as media_humidade " +
-                    "FROM dados GROUP BY nova_data ORDER BY nova_data";//Seleciona dados, ordena por mês e faz a média
-                                                                       //de temperatura e humidade por mês
-        }
 
         try (conn; Statement stmt  = conn.createStatement();ResultSet rs    = stmt.executeQuery(sql)) {
             while (rs.next()) {//Executa a query
-                data.add(new BuildingData("", rs.getString("nova_data"),
-                        Double.parseDouble(rs.getString("media_temperatura")),0,
-                        Double.parseDouble(rs.getString("media_humidade"))));
+                data.add(new BuildingData("", rs.getString("data"),
+                        Double.parseDouble(rs.getString("temperatura")),0,
+                        Double.parseDouble(rs.getString("humidade"))));
             }
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
@@ -522,38 +558,60 @@ public class Controller implements SerialPortDataListener{
         }
     }
 
-    /**Função para estabelecer período de coleta automática de dados
-     * @param periodo: escolhido pelo utilizador na ChoiceBox da página de Dados Armazenados
-     * */
-    public void setPeriodo(String periodo){
-        if(periodo == "Diariamente"){
-            Timer timer = new Timer();
-
-            Calendar calendar = Calendar.getInstance();
-            calendar.set(Calendar.HOUR_OF_DAY, 20);
-            calendar.set(Calendar.MINUTE, 10);
-            calendar.set(Calendar.SECOND, 0);
-
-            Date firstExecution = calendar.getTime();
-
-            timer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    // Chamar a função updateDb() para enviar os dados à base de dados
-                    try {
-                        updateDb();
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                    // Reagendar a tarefa para o próximo dia
-                    calendar.add(Calendar.DAY_OF_YEAR, 1); // Adicionar 1 dia ao calendário
-                    Date nextExecution = calendar.getTime();
-                    timer.schedule(this, nextExecution);
-                }
-            }, firstExecution);
+    /**
+     * Função para desligar coleta automática de dados
+     */
+    public void setPeriodoOff() {
+        coletaAutomatica = false;
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
         }
+    }
 
+    /**
+     * Função para estabelecer período de coleta automática de dados
+     */
+    public void setPeriodo() {
+        coletaAutomatica = true;
+        timer = new Timer();
 
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 15);
+        calendar.set(Calendar.MINUTE, 50);
+        calendar.set(Calendar.SECOND, 0);
+
+        scheduleDataCollection(calendar.getTime(), timer);
+
+        calendar.set(Calendar.HOUR_OF_DAY, 15);
+        calendar.set(Calendar.MINUTE, 55);
+        calendar.set(Calendar.SECOND, 0);
+        scheduleDataCollection(calendar.getTime(), timer);
+
+        calendar.set(Calendar.HOUR_OF_DAY, 16);
+        calendar.set(Calendar.MINUTE, 5);
+        calendar.set(Calendar.SECOND, 0);
+        scheduleDataCollection(calendar.getTime(), timer);
+    }
+
+    private void scheduleDataCollection(Date firstExecution, Timer timer) {
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    updateDb();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+
+                if (coletaAutomatica) {
+                    Calendar nextExecution = Calendar.getInstance();
+                    nextExecution.setTime(firstExecution);
+                    nextExecution.add(Calendar.DAY_OF_YEAR, 1);
+                    scheduleDataCollection(nextExecution.getTime(), timer);
+                }
+            }
+        }, firstExecution);
     }
 
 
@@ -766,5 +824,15 @@ public class Controller implements SerialPortDataListener{
     @FXML
     private ChoiceBox ordenar;
     @FXML
-    private ChoiceBox periodo;
+    private ChoiceBox dia;
+    @FXML
+    private ChoiceBox mes;
+    @FXML
+    private ChoiceBox ano;
+    @FXML
+    private RadioButton periodoOn;
+    @FXML
+    private RadioButton periodoOff;
+    @FXML
+    private ToggleGroup periodoGroup;
 }

@@ -1,0 +1,8 @@
+graphics - "https://www.iconsdb.com/white-icons/combo-icon.html"
+arrow - "https://www.iconsdb.com/white-icons/arrow-121-icon.html" 
+refresh - "https://www.iconsdb.com/white-icons/sinchronize-icon.html"
+temperature - "https://www.flaticon.com/free-icons/temperature" 
+drop - "https://www.flaticon.com/free-icons/water"
+bell - "https://www.flaticon.com/free-icons/notification"
+home - "https://www.flaticon.com/free-icons/home-button" 
+list - "https://www.flaticon.com/free-icons/list"

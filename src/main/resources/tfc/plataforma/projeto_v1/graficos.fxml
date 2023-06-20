@@ -3,7 +3,6 @@
 <?import javafx.scene.chart.CategoryAxis?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
-<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.image.Image?>
@@ -55,7 +54,6 @@
           <NumberAxis animated="false" label="Valor (°C)" side="LEFT" />
         </yAxis>
       </LineChart>
-      <Button layoutX="14.0" layoutY="104.0" mnemonicParsing="false" onAction="#switchToList" prefHeight="43.0" prefWidth="132.0" text="Voltar" />
       <LineChart fx:id="hum_graphic" layoutX="773.0" layoutY="173.0" title="Humidade">
         <xAxis>
           <CategoryAxis animated="false" label="Data" />
@@ -64,10 +62,44 @@
           <NumberAxis animated="false" label="Valor (%)" side="LEFT" />
         </yAxis>
       </LineChart>
-      <ChoiceBox fx:id="ordenar" layoutX="621.0" layoutY="135.0" prefWidth="150.0" />
-      <Text layoutX="630.0" layoutY="126.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Ordenar por:" textAlignment="CENTER" wrappingWidth="131.99999999999997">
+      <ChoiceBox fx:id="ordenar" layoutX="342.0" layoutY="136.0" prefWidth="150.0" visible="false" />
+      <Text layoutX="351.0" layoutY="127.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Obter médias:" textAlignment="CENTER" visible="false" wrappingWidth="131.99999999999997">
          <font>
             <Font size="20.0" />
+         </font>
+      </Text>
+      <Text layoutX="630.0" layoutY="120.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Visualizar por data:" textAlignment="CENTER" wrappingWidth="205.99999999999997">
+         <font>
+            <Font size="20.0" />
+         </font>
+      </Text>
+      <ChoiceBox id="dia" fx:id="dia" layoutX="526.0" layoutY="135.0" prefHeight="25.0" prefWidth="68.0" />
+      <ChoiceBox id="mes" fx:id="mes" layoutX="672.0" layoutY="135.0" prefWidth="150.0" />
+      <Text layoutX="464.0" layoutY="155.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Dia:" textAlignment="CENTER" wrappingWidth="61.125">
+         <font>
+            <Font size="20.0" />
+         </font>
+      </Text>
+      <Text layoutX="604.0" layoutY="154.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Mês:" textAlignment="CENTER" wrappingWidth="68.0">
+         <font>
+            <Font size="20.0" />
+         </font>
+      </Text>
+      <ChoiceBox id="ano" fx:id="ano" layoutX="890.0" layoutY="135.0" prefHeight="25.0" prefWidth="125.0" />
+      <Text layoutX="834.0" layoutY="153.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Ano:" textAlignment="CENTER" wrappingWidth="55.0">
+         <font>
+            <Font size="20.0" />
+         </font>
+      </Text>
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#007eff" height="51.0" layoutX="35.0" layoutY="111.0" stroke="TRANSPARENT" strokeLineCap="ROUND" strokeLineJoin="ROUND" strokeType="OUTSIDE" strokeWidth="2.0" width="103.0" />
+      <ImageView fitHeight="27.0" fitWidth="38.0" layoutX="41.0" layoutY="123.0" onMouseClicked="#switchToList" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../../../img/arrow.png" />
+         </image>
+      </ImageView>
+      <Text fill="WHITE" layoutX="76.0" layoutY="142.0" onMouseClicked="#switchToList" smooth="false" strokeType="OUTSIDE" strokeWidth="0.0" text="Voltar" textAlignment="CENTER" wrappingWidth="55.0">
+         <font>
+            <Font name="System Bold" size="15.0" />
          </font>
       </Text>
     </children>

@@ -105,6 +105,6 @@
       <Separator layoutX="212.0" layoutY="528.0" prefHeight="3.0" prefWidth="1015.0" />
       <TextField fx:id="tempMin" layoutX="1050.0" layoutY="182.0" prefHeight="25.0" prefWidth="127.0" promptText="Temperatura Mínima" visible="false" />
       <TextField fx:id="tempMax" layoutX="1050.0" layoutY="214.0" prefHeight="25.0" prefWidth="127.0" promptText="Temperatura Máxima" visible="false" />
-      <Button fx:id="confirmTemp" layoutX="1193.0" layoutY="197.0" mnemonicParsing="false" onAction="#enviarTemperaturas" text="Confirmar" textAlignment="CENTER" visible="false" />
+      <Button fx:id="confirmTemp" contentDisplay="CENTER" layoutX="1193.0" layoutY="197.0" mnemonicParsing="false" onAction="#enviarTemperaturas" style="-fx-background-color: #007eff;" text="Confirmar" textAlignment="CENTER" textFill="WHITE" visible="false" />
    </children>
 </AnchorPane>
