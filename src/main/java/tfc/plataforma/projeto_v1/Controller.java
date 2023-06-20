@@ -31,17 +31,21 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.stream.IntStream;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 
 public class Controller implements SerialPortDataListener{
     private final SerialPort port = SerialPort.getCommPorts()[0];
-    private double temp = 0, lum = 0, humidade = 0, dist = 0;
+    private double temp = 0,temperaturaMax = 25.0,temperaturaMin = 15.0, lum = 0, humidade = 0, dist = 0;
     private String buffer = "";
     private boolean firstRead = true, connectedToDb = false, connectedToArduino = false, coletaAutomatica = false;
     private FXMLLoader homePage, alarmsPage, listPage, graphicsPage;
     private Stage stage;
     private  Scene sceneHome, sceneAlarms, sceneList, sceneGraphics;
     private final ArduinoCommands arduino = new ArduinoCommands(port);
-    private ArrayList<BuildingData> dadosEdificio = new ArrayList<>();
+    private ArrayList<BuildingData> dadosEdificio = new ArrayList<>(); //Dados do edifício sem filtro
+    private ArrayList<BuildingData> dadosEdificioFiltrados = new ArrayList<>(); //Dados do edifício com filtro
     private Alarmes alarmes = new Alarmes();
     private Timer timer;
 
@@ -53,8 +57,10 @@ public class Controller implements SerialPortDataListener{
         connectToDb();
         fillGraphics();
 
+        /*Inicializar Choice Boxes utilizadas nas páginas de gráficos e lista*/
         ano.getItems().addAll("2023");
         ano.setValue("2023");
+        anoFiltro.getItems().addAll("2023");
 
         String[] meses = {"Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"};
         mes.getItems().addAll("Não Especificar");
@@ -67,9 +73,11 @@ public class Controller implements SerialPortDataListener{
             }
         });
 
+        mesFiltro.getItems().addAll("Não Especificar");
+        mesFiltro.getItems().addAll(meses);
+
         dia.getItems().addAll("Não Especificar");
         dia.getItems().addAll(IntStream.rangeClosed(1, 31).mapToObj(String::valueOf).toArray(String[]::new));
-
         dia.setOnAction(event -> {
             try {
                 sortGraphics((String) dia.getValue(),(String) mes.getValue());
@@ -78,6 +86,8 @@ public class Controller implements SerialPortDataListener{
             }
         });
 
+        diaFiltro.getItems().addAll("Não Especificar");
+        diaFiltro.getItems().addAll(IntStream.rangeClosed(1, 31).mapToObj(String::valueOf).toArray(String[]::new));
 
     }
 
@@ -190,11 +200,70 @@ public class Controller implements SerialPortDataListener{
                 }
             }
             case 'A' -> {
-                alarmeTipo = Integer.parseInt(dados);
+
+                    alarmeTipo = Integer.parseInt(dados);
+                    exibirPopupAlarme(alarmeTipo);
+
             }
             default -> System.out.println("Nenhum dado encontrado");
         }
 
+    }
+
+    /**Exibe um popUp quando um dos alarmes for acionado*/
+    private void exibirPopupAlarme(int alarmeTipo) {
+        String mensagem = "";
+        switch (alarmeTipo) {
+            case 1:
+                if(temp > temperaturaMax){
+                    mensagem = "Temperatura acima do limite!";
+                }else if(temp < temperaturaMin){
+                    mensagem = "Temperatura abaixo do limite!";
+                }
+                break;
+            case 2:
+                mensagem = "Luminosidade acima do limite!";
+                break;
+            case 3:
+                mensagem = "Abertura de porta detetada!";
+                break;
+        }
+
+        // Executar na thread da interface gráfica
+        String finalMensagem = mensagem;
+        Platform.runLater(() -> {
+            Alert alert = new Alert(AlertType.INFORMATION);
+            alert.setTitle("Acionamento de Alarme");
+            alert.setHeaderText(null);
+            alert.setContentText(finalMensagem);
+
+            // Adicionar botões personalizados
+            ButtonType desligarButton = new ButtonType("Fechar e Desligar");
+            ButtonType okButton = new ButtonType("OK");
+            alert.getButtonTypes().setAll(desligarButton, okButton);
+
+            // Obter o diálogo do Alert
+            DialogPane dialogPane = alert.getDialogPane();
+
+            // Obter os botões do Alert
+            Button desligarButtonNode = (Button) dialogPane.lookupButton(desligarButton);
+            Button okButtonNode = (Button) dialogPane.lookupButton(okButton);
+
+            // Definir a ação para o botão "Fechar e Desligar"
+            desligarButtonNode.setOnAction(event -> {
+                try {
+                    desligarAlarme(alarmeTipo);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+                alert.close();
+            });
+
+            // Fechar o pop-up ao clicar em "OK"
+            okButtonNode.setOnAction(event -> alert.close());
+
+            alert.showAndWait();
+        });
     }
 
     /**Função para atualizar o texto em um campo de texto de JavaFX
@@ -264,7 +333,7 @@ public class Controller implements SerialPortDataListener{
                     System.out.println("Row Added");
                     dadosEdificio.clear(); //Limpa os dados armazenados
                     updateList(conn); //Preenche a lista com os novos dados atualizados
-                    fillTable(true); //Atualiza a tabela apenas com o último valor inserido
+                    fillTable(true,false); //Atualiza a tabela apenas com o último valor inserido
 
                 }
             }
@@ -293,7 +362,9 @@ public class Controller implements SerialPortDataListener{
             System.out.println(ex.getMessage());
         }
 
-        if(ativarAlarmes) ativarAlarmes();
+        if(ativarAlarmes){
+            ativarAlarmes();
+        }
     }
 
     /**Função ativar os alarmes de acordo com o que está salvo na base de dados
@@ -326,6 +397,84 @@ public class Controller implements SerialPortDataListener{
 
     }
 
+    /**Função para filtrar a lista de dados do edificio
+     * */
+    public void filterList() throws SQLException {
+        String[] meses = {"Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"};
+        ArrayList<BuildingData> dados = new ArrayList<BuildingData>();
+        String dia = (String) diaFiltro.getValue();
+        String mes =  (String )mesFiltro.getValue();
+        String maxTemp = tempMaxFiltro.getText();
+        String minTemp = tempMinFiltro.getText();
+        String maxHum = humMaxFiltro.getText();
+        String minHum = humMinFiltro.getText();
+        int mesNum = 0;
+
+        // Verificar se as variáveis são nulas e atribuir "" se necessário
+        dia = (dia == null || dia.equals("Não Especificar")) ? "" : dia;
+        mes = (mes == null || mes.equals("Não Especificar")) ? "" : mes;
+        maxTemp = (maxTemp != null) ? maxTemp : "";
+        minTemp = (minTemp != null) ? minTemp : "";
+        maxHum = (maxHum != null) ? maxHum : "";
+        minHum = (minHum != null) ? minHum : "";
+
+        if (!mes.equals("")) {
+            for (int i = 0; i < meses.length; i++) {
+                if (mes.equals(meses[i])) {
+                    mesNum = i + 1;
+                }
+            }
+        }
+
+        // Construir a query SQL
+        String query = "SELECT * FROM dados WHERE ";
+
+        if (!dia.isEmpty()) {
+            query += "DAY(data) = " + dia + " AND ";
+        }
+        if (!mes.isEmpty()) {
+            query += "MONTH(data) = " + mesNum + " AND ";
+        }
+        if (!maxTemp.isEmpty()) {
+            query += "temperatura < " + maxTemp + " AND ";
+        }
+        if (!minTemp.isEmpty()) {
+            query += "temperatura > " + minTemp + " AND ";
+        }
+        if (!maxHum.isEmpty()) {
+            query += "humidade < " + maxHum + " AND ";
+        }
+        if (!minHum.isEmpty()) {
+            query += "humidade > " + minHum + " AND ";
+        }
+
+        if (query.endsWith("AND ")) {
+            query = query.substring(0, query.length() - 4); // Remove o "AND " do final
+        }
+
+        dadosEdificioFiltrados.clear();
+        dados = getSortedData(query);
+        dadosEdificioFiltrados.addAll(dados);
+        table.getItems().clear();
+        fillTable(false,true);
+
+    }
+
+    /**Função para remover os filtros aplicados à tabela
+     * */
+    @FXML
+    protected void removerFiltros(){
+        table.getItems().clear();
+        dadosEdificioFiltrados.clear();
+        diaFiltro.setValue("");
+        mesFiltro.setValue("");
+        anoFiltro.setValue("");
+        tempMaxFiltro.clear();
+        tempMinFiltro.clear();
+        humMinFiltro.clear();
+        humMaxFiltro.clear();
+        fillTable(false,false);
+    }
 
 
     /**Função para atualizar a lista de dados do edificio
@@ -370,8 +519,6 @@ public class Controller implements SerialPortDataListener{
         temp_graphics.getData().add(tempSeries); //Carrega a Series no gráfico
         hum_graphic.getData().add(humiditySeries);
 
-        temp_graphics.getXAxis().setTickLabelsVisible(false);
-        hum_graphic.getXAxis().setTickLabelsVisible(false);
     }
 
     /**Função para ordenar os gráficos de humidade e temperatura
@@ -388,6 +535,8 @@ public class Controller implements SerialPortDataListener{
 
         if(dia != null && dia.equals("Não Especificar") && mes.equals("Não Especificar")){
             fillGraphics();
+            temp_graphics.getXAxis().setTickLabelsVisible(false);
+            hum_graphic.getXAxis().setTickLabelsVisible(false);
             return;
         }
 
@@ -397,16 +546,16 @@ public class Controller implements SerialPortDataListener{
                     mesNum = i + 1;
                 }
             }
+            // Recebe uma nova lista com os dados
             if (dia == null || dia.equals("Não Especificar")) {
                 sql = "SELECT *" +
                         " FROM dados" +
                         " WHERE MONTH(data) = " + mesNum + " AND YEAR(data) = 2023";
-                dados = getSortedData(sql); // Recebe uma nova lista com os dados
             }else{
                 data = "2023-" + mesNum + "-" + dia;
                 sql = "SELECT * FROM dados WHERE DATE(data) = '"+data+"'";
-                dados = getSortedData(sql); // Recebe uma nova lista com os dados
             }
+            dados = getSortedData(sql); // Recebe uma nova lista com os dados
         }
 
         temp_graphics.getData().clear(); //Limpa os dados dos gráficos
@@ -428,6 +577,9 @@ public class Controller implements SerialPortDataListener{
 
         temp_graphics.getData().add(tempSeries); //Carrega a Series ao gráfico
         hum_graphic.getData().add(humiditySeries);
+
+        temp_graphics.getXAxis().setTickLabelsVisible(true);
+        hum_graphic.getXAxis().setTickLabelsVisible(true);
     }
 
     /**Função para obter os dados ordenados por mês ou dia
@@ -439,7 +591,7 @@ public class Controller implements SerialPortDataListener{
 
         try (conn; Statement stmt  = conn.createStatement();ResultSet rs    = stmt.executeQuery(sql)) {
             while (rs.next()) {//Executa a query
-                data.add(new BuildingData("", rs.getString("data"),
+                data.add(new BuildingData(rs.getString("id"), rs.getString("data"),
                         Double.parseDouble(rs.getString("temperatura")),0,
                         Double.parseDouble(rs.getString("humidade"))));
             }
@@ -541,19 +693,24 @@ public class Controller implements SerialPortDataListener{
         table.getColumns().add(column4);
         table.getColumns().add(column5);
 
-        fillTable(false);//Chama a função para preencher a tabela com os dados do ArrayList dadosEdificio
+        fillTable(false, false);//Chama a função para preencher a tabela com os dados do ArrayList dadosEdificio
     }
 
     /**Função para preencher a tabela com dados
      * @param lastItemOnly: Caso seja True, atualiza apenas o último item adicionado à lista
+     * @param usarFiltros: Caso seja True, a tabela irá ser preenchida com dados filtrados
      * */
-    public void fillTable(Boolean lastItemOnly){
+    public void fillTable(Boolean lastItemOnly, Boolean usarFiltros){
         if(lastItemOnly){
             table.getItems().add(dadosEdificio.get(dadosEdificio.size()-1)); //Armazena apenas o último valor
                                                                              //da base de dados
-        }else{
+        }else if(!usarFiltros){
             for(int i = 0; i < dadosEdificio.size(); i++){
                 table.getItems().add(dadosEdificio.get(i));//Adiciona à tabela todos os dados
+            }
+        }else{
+            for(int i = 0; i < dadosEdificioFiltrados.size(); i++){
+                table.getItems().add(dadosEdificioFiltrados.get(i));//Adiciona à tabela todos os dados
             }
         }
     }
@@ -561,37 +718,74 @@ public class Controller implements SerialPortDataListener{
     /**
      * Função para desligar coleta automática de dados
      */
-    public void setPeriodoOff() {
+    public void setPeriodoOff() throws SQLException {
+        Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/tfc","root","12151829");
+        String sql = "UPDATE utilizadores SET coletaAutomatica = 0";
+
         coletaAutomatica = false;
         if (timer != null) {
             timer.cancel();
             timer = null;
+        }
+
+        /*Atualiza base de dados*/
+        try (conn){
+            PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS); {
+                if(pstmt.executeUpdate() == 1)
+                {
+                    System.out.println("Row Updated");
+                }
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
         }
     }
 
     /**
      * Função para estabelecer período de coleta automática de dados
      */
-    public void setPeriodo() {
+    public void setPeriodo() throws SQLException{
         coletaAutomatica = true;
         timer = new Timer();
-
+        Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/tfc","root","12151829");
+        String sql = "UPDATE utilizadores SET coletaAutomatica = 1";
         Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 15);
-        calendar.set(Calendar.MINUTE, 50);
-        calendar.set(Calendar.SECOND, 0);
 
-        scheduleDataCollection(calendar.getTime(), timer);
-
-        calendar.set(Calendar.HOUR_OF_DAY, 15);
-        calendar.set(Calendar.MINUTE, 55);
+        // Horário 1: 10:00
+        calendar.set(Calendar.HOUR_OF_DAY, 10);
+        calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
-        scheduleDataCollection(calendar.getTime(), timer);
+        if (calendar.getTime().after(new Date())) {
+            scheduleDataCollection(calendar.getTime(), timer);
+        }
 
-        calendar.set(Calendar.HOUR_OF_DAY, 16);
-        calendar.set(Calendar.MINUTE, 5);
+        // Horário 2: 14:00
+        calendar.set(Calendar.HOUR_OF_DAY, 14);
+        calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
-        scheduleDataCollection(calendar.getTime(), timer);
+        if (calendar.getTime().after(new Date())) {
+            scheduleDataCollection(calendar.getTime(), timer);
+        }
+
+        // Horário 3: 18:00
+        calendar.set(Calendar.HOUR_OF_DAY, 18);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        if (calendar.getTime().after(new Date())) {
+            scheduleDataCollection(calendar.getTime(), timer);
+        }
+
+        /*Atualiza base de dados*/
+        try (conn){
+            PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS); {
+                if(pstmt.executeUpdate() == 1)
+                {
+                    System.out.println("Row Updated");
+                }
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        }
     }
 
     private void scheduleDataCollection(Date firstExecution, Timer timer) {
@@ -634,6 +828,8 @@ public class Controller implements SerialPortDataListener{
         loadScene("graficos.fxml","Gráficos");
         ordenar.setValue("Todos os dados");
         fillGraphics();
+        temp_graphics.getXAxis().setTickLabelsVisible(false);
+        hum_graphic.getXAxis().setTickLabelsVisible(false);
     }
 
     /**Invoca a função loadScene para mudar a Scene para a página de dados*/
@@ -696,6 +892,8 @@ public class Controller implements SerialPortDataListener{
         tempMin.setVisible(false);
         tempMax.setVisible(false);
         confirmTemp.setVisible(false);
+        tempOff.setSelected(true);
+        tempOn.setSelected(false);
         alarmes.updateAlarm(1, 0);
     }
 
@@ -710,6 +908,8 @@ public class Controller implements SerialPortDataListener{
     @FXML
     private void doorAlarmOff()throws SQLException{
         arduino.doorAlarmOff();
+        doorOff.setSelected(true);
+        doorOn.setSelected(false);
         alarmes.updateAlarm(3, 0);
     }
 
@@ -724,7 +924,18 @@ public class Controller implements SerialPortDataListener{
     @FXML
     private void lumAlarmOff()throws SQLException{
         arduino.lumAlarmOff();
+        lumOff.setSelected(true);
+        lumOn.setSelected(false);
         alarmes.updateAlarm(2, 0);
+    }
+
+    /**Função para desligar o alarme passado como parâmetro*/
+    private void desligarAlarme(int alarmeTipo) throws SQLException {
+        switch (alarmeTipo) {
+            case 1 -> tempAlarmOff();
+            case 2 -> lumAlarmOff();
+            case 3 -> doorAlarmOff();
+        }
     }
 
     /**Função que envia as temperaturas mínimas e máximas colocadas pelo utilizador*/
@@ -735,11 +946,13 @@ public class Controller implements SerialPortDataListener{
 
         if(max != null && !max.equals("")){
             arduino.tempMax(Integer.parseInt(max));
+            temperaturaMax = Double.parseDouble(max);
             tempMax.clear();
         }
 
         if(min != null && !min.equals("")){
             arduino.tempMin(Integer.parseInt(min));
+            temperaturaMin = Double.parseDouble(min);
             tempMin.clear();
         }
     }
@@ -820,7 +1033,19 @@ public class Controller implements SerialPortDataListener{
     @FXML
     private TextField tempMax;
     @FXML
+    private TextField tempMinFiltro;
+    @FXML
+    private TextField tempMaxFiltro;
+    @FXML
+    private TextField humMinFiltro;
+    @FXML
+    private TextField humMaxFiltro;
+    @FXML
     private Button confirmTemp;
+    @FXML
+    private Button aplicarFiltros;
+    @FXML
+    private Button removerFiltros;
     @FXML
     private ChoiceBox ordenar;
     @FXML
@@ -829,6 +1054,12 @@ public class Controller implements SerialPortDataListener{
     private ChoiceBox mes;
     @FXML
     private ChoiceBox ano;
+    @FXML
+    private ChoiceBox diaFiltro;
+    @FXML
+    private ChoiceBox mesFiltro;
+    @FXML
+    private ChoiceBox anoFiltro;
     @FXML
     private RadioButton periodoOn;
     @FXML

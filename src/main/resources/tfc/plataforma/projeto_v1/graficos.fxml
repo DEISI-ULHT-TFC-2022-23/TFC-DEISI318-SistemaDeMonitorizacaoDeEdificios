@@ -73,8 +73,8 @@
             <Font size="20.0" />
          </font>
       </Text>
-      <ChoiceBox id="dia" fx:id="dia" layoutX="526.0" layoutY="135.0" prefHeight="25.0" prefWidth="68.0" />
-      <ChoiceBox id="mes" fx:id="mes" layoutX="672.0" layoutY="135.0" prefWidth="150.0" />
+      <ChoiceBox id="dia" fx:id="dia" layoutX="526.0" layoutY="135.0" prefHeight="25.0" prefWidth="68.0" style="-fx-background-color: WHITE;" />
+      <ChoiceBox id="mes" fx:id="mes" layoutX="672.0" layoutY="135.0" prefWidth="150.0" style="-fx-background-color: WHITE;" />
       <Text layoutX="464.0" layoutY="155.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Dia:" textAlignment="CENTER" wrappingWidth="61.125">
          <font>
             <Font size="20.0" />
@@ -85,7 +85,7 @@
             <Font size="20.0" />
          </font>
       </Text>
-      <ChoiceBox id="ano" fx:id="ano" layoutX="890.0" layoutY="135.0" prefHeight="25.0" prefWidth="125.0" />
+      <ChoiceBox id="ano" fx:id="ano" layoutX="890.0" layoutY="135.0" prefHeight="25.0" prefWidth="125.0" style="-fx-background-color: WHITE;" />
       <Text layoutX="834.0" layoutY="153.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Ano:" textAlignment="CENTER" wrappingWidth="55.0">
          <font>
             <Font size="20.0" />
