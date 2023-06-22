@@ -238,8 +238,8 @@ public class Controller implements SerialPortDataListener{
             alert.setContentText(finalMensagem);
 
             // Adicionar botões personalizados
-            ButtonType desligarButton = new ButtonType("Fechar e Desligar");
-            ButtonType okButton = new ButtonType("OK");
+            ButtonType desligarButton = new ButtonType("Desligar Alarme e Fechar");
+            ButtonType okButton = new ButtonType("Fechar");
             alert.getButtonTypes().setAll(desligarButton, okButton);
 
             // Obter o diálogo do Alert

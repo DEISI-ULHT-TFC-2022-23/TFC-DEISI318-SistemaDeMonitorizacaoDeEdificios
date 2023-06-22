@@ -5,7 +5,7 @@
  
 Adafruit_BMP085 bmp; //Objeto do tipo Adafruit_BMP085 para leitura do sensor BMP180
 float temperatura = 0; //Temperatura aqdquirida pelo sensor BMP180
-int tempMax = 25; int tempMin = 15; //Temperaturas enviadas pelo utiliador
+int tempMax = 30; int tempMin = 15; //Temperaturas enviadas pelo utiliador
 
 int photoresistor_pin = A0; // Pin do Photoresistor
 float photoresistor_value = 0; //Valor da leitura do photoresistor

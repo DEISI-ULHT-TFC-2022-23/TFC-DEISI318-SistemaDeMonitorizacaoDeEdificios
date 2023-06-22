@@ -91,7 +91,7 @@
             <Font size="20.0" />
          </font>
       </Text>
-      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#007eff" height="51.0" layoutX="35.0" layoutY="111.0" stroke="TRANSPARENT" strokeLineCap="ROUND" strokeLineJoin="ROUND" strokeType="OUTSIDE" strokeWidth="2.0" width="103.0" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#007eff" height="51.0" layoutX="35.0" layoutY="111.0" onMouseClicked="#switchToList" stroke="TRANSPARENT" strokeLineCap="ROUND" strokeLineJoin="ROUND" strokeType="OUTSIDE" strokeWidth="2.0" width="103.0" />
       <ImageView fitHeight="27.0" fitWidth="38.0" layoutX="41.0" layoutY="123.0" onMouseClicked="#switchToList" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../../../img/arrow.png" />
