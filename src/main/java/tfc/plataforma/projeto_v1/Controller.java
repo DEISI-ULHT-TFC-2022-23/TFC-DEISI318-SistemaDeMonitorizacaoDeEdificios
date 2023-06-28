@@ -592,7 +592,8 @@ public class Controller implements SerialPortDataListener{
         try (conn; Statement stmt  = conn.createStatement();ResultSet rs    = stmt.executeQuery(sql)) {
             while (rs.next()) {//Executa a query
                 data.add(new BuildingData(rs.getString("id"), rs.getString("data"),
-                        Double.parseDouble(rs.getString("temperatura")),0,
+                        Double.parseDouble(rs.getString("temperatura")),
+                        Double.parseDouble(rs.getString("luminosidade")),
                         Double.parseDouble(rs.getString("humidade"))));
             }
         } catch (SQLException ex) {
