@@ -39,7 +39,7 @@ public class Controller implements SerialPortDataListener{
     private final SerialPort port = SerialPort.getCommPorts()[0];
     private double temp = 0,temperaturaMax = 25.0,temperaturaMin = 15.0, lum = 0, humidade = 0, dist = 0;
     private String buffer = "";
-    private boolean firstRead = true, connectedToDb = false, connectedToArduino = false, coletaAutomatica = false;
+    private boolean firstRead = true, connectedToDb = false, popupAtivo = false, coletaAutomatica = false;
     private FXMLLoader homePage, alarmsPage, listPage, graphicsPage;
     private Stage stage;
     private  Scene sceneHome, sceneAlarms, sceneList, sceneGraphics;
@@ -100,11 +100,9 @@ public class Controller implements SerialPortDataListener{
         port.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 0, 0);
         if (port.openPort()){
             System.out.println(port.getPortDescription() + " port opened.");
-            connectedToArduino = true;
             updateLabel(dispositivo_id, "Conectado", Color.GREEN);
         }else{
             System.out.println("Couldn't open port");
-            connectedToArduino = false;
             updateLabel(dispositivo_id, "Desconectado", Color.RED);
         }
         //PacketListener listener = new PacketListener();
@@ -118,7 +116,6 @@ public class Controller implements SerialPortDataListener{
         port.disablePortConfiguration();
         if (port.closePort()) {
             System.out.println("Port is closed :)");
-            connectedToArduino = false;
             updateLabel(dispositivo_id, "Desconectado", Color.RED);
         } else {
             System.out.println("Failed to close port :(");
@@ -213,6 +210,7 @@ public class Controller implements SerialPortDataListener{
     /**Exibe um popUp quando um dos alarmes for acionado*/
     private void exibirPopupAlarme(int alarmeTipo) {
         String mensagem = "";
+        if(popupAtivo){return;}
         switch (alarmeTipo) {
             case 1:
                 if(temp > temperaturaMax){
@@ -257,11 +255,12 @@ public class Controller implements SerialPortDataListener{
                     e.printStackTrace();
                 }
                 alert.close();
+                popupAtivo = false;
             });
 
             // Fechar o pop-up ao clicar em "OK"
-            okButtonNode.setOnAction(event -> alert.close());
-
+            okButtonNode.setOnAction(event -> {alert.close();popupAtivo=false;});
+            popupAtivo = true;
             alert.showAndWait();
         });
     }
@@ -310,6 +309,31 @@ public class Controller implements SerialPortDataListener{
     /**Função para inserir dados na base de dados. Chamada ao carregar no botão de atualizar dados na
      * página de dados armazenados*/
     @FXML
+    protected void atualizarDados() throws SQLException {
+        updateDb();
+        Platform.runLater(() -> {
+            Alert alert = new Alert(AlertType.INFORMATION);
+            alert.setTitle("Sucesso");
+            alert.setHeaderText(null);
+            alert.setContentText("Dados Armazenados com Sucesso!");
+
+            ButtonType okButton = new ButtonType("Fechar");
+            alert.getButtonTypes().setAll(okButton);
+
+            // Obter o diálogo do Alert
+            DialogPane dialogPane = alert.getDialogPane();
+
+            Button okButtonNode = (Button) dialogPane.lookupButton(okButton);
+
+            // Fechar o pop-up ao clicar em "OK"
+            okButtonNode.setOnAction(event -> {alert.close();popupAtivo=false;});
+            popupAtivo = true;
+            alert.showAndWait();
+        });
+    }
+
+    /**Função para atualiar os dados na base de dados.*/
+    @FXML
     protected void updateDb() throws SQLException {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"); //Define formato para data
         LocalDateTime now = LocalDateTime.now(); //Recolhe a data e hora atual
@@ -333,7 +357,8 @@ public class Controller implements SerialPortDataListener{
                     System.out.println("Row Added");
                     dadosEdificio.clear(); //Limpa os dados armazenados
                     updateList(conn); //Preenche a lista com os novos dados atualizados
-                    fillTable(true,false); //Atualiza a tabela apenas com o último valor inserido
+                    table.getItems().clear();
+                    fillTable(false); //Atualiza a tabela apenas com o último valor inserido
 
                 }
             }
@@ -408,6 +433,8 @@ public class Controller implements SerialPortDataListener{
         String minTemp = tempMinFiltro.getText();
         String maxHum = humMaxFiltro.getText();
         String minHum = humMinFiltro.getText();
+        String minLum = lumMinFiltro.getText();
+        String maxLum = lumMaxFiltro.getText();
         int mesNum = 0;
 
         // Verificar se as variáveis são nulas e atribuir "" se necessário
@@ -417,6 +444,8 @@ public class Controller implements SerialPortDataListener{
         minTemp = (minTemp != null) ? minTemp : "";
         maxHum = (maxHum != null) ? maxHum : "";
         minHum = (minHum != null) ? minHum : "";
+        maxLum = (maxLum != null) ? maxLum : "";
+        minLum = (minLum != null) ? minLum : "";
 
         if (!mes.equals("")) {
             for (int i = 0; i < meses.length; i++) {
@@ -447,6 +476,12 @@ public class Controller implements SerialPortDataListener{
         if (!minHum.isEmpty()) {
             query += "humidade > " + minHum + " AND ";
         }
+        if (!maxLum.isEmpty()) {
+            query += "luminosidade < " + maxLum + " AND ";
+        }
+        if (!minLum.isEmpty()) {
+            query += "luminosidade > " + minLum + " AND ";
+        }
 
         if (query.endsWith("AND ")) {
             query = query.substring(0, query.length() - 4); // Remove o "AND " do final
@@ -456,7 +491,7 @@ public class Controller implements SerialPortDataListener{
         dados = getSortedData(query);
         dadosEdificioFiltrados.addAll(dados);
         table.getItems().clear();
-        fillTable(false,true);
+        fillTable(true);
 
     }
 
@@ -473,7 +508,9 @@ public class Controller implements SerialPortDataListener{
         tempMinFiltro.clear();
         humMinFiltro.clear();
         humMaxFiltro.clear();
-        fillTable(false,false);
+        lumMinFiltro.clear();
+        lumMaxFiltro.clear();
+        fillTable(false);
     }
 
 
@@ -594,7 +631,7 @@ public class Controller implements SerialPortDataListener{
                 data.add(new BuildingData(rs.getString("id"), rs.getString("data"),
                         Double.parseDouble(rs.getString("temperatura")),
                         Double.parseDouble(rs.getString("luminosidade")),
-                        Double.parseDouble(rs.getString("humidade"))));
+                        Double.parseDouble(rs.getString("humidade"))));//Armazena os dados na ArrayList
             }
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
@@ -694,23 +731,19 @@ public class Controller implements SerialPortDataListener{
         table.getColumns().add(column4);
         table.getColumns().add(column5);
 
-        fillTable(false, false);//Chama a função para preencher a tabela com os dados do ArrayList dadosEdificio
+        fillTable(false);//Chama a função para preencher a tabela com os dados do ArrayList dadosEdificio
     }
 
     /**Função para preencher a tabela com dados
-     * @param lastItemOnly: Caso seja True, atualiza apenas o último item adicionado à lista
      * @param usarFiltros: Caso seja True, a tabela irá ser preenchida com dados filtrados
      * */
-    public void fillTable(Boolean lastItemOnly, Boolean usarFiltros){
-        if(lastItemOnly){
-            table.getItems().add(dadosEdificio.get(dadosEdificio.size()-1)); //Armazena apenas o último valor
-                                                                             //da base de dados
-        }else if(!usarFiltros){
-            for(int i = 0; i < dadosEdificio.size(); i++){
+    public void fillTable (Boolean usarFiltros){
+        if(!usarFiltros){
+            for(int i = dadosEdificio.size()-1; i >= 0; i--){
                 table.getItems().add(dadosEdificio.get(i));//Adiciona à tabela todos os dados
             }
         }else{
-            for(int i = 0; i < dadosEdificioFiltrados.size(); i++){
+            for(int i = dadosEdificioFiltrados.size()-1; i >= 0; i--){
                 table.getItems().add(dadosEdificioFiltrados.get(i));//Adiciona à tabela todos os dados
             }
         }
@@ -879,6 +912,8 @@ public class Controller implements SerialPortDataListener{
     /**Função que envia sinal ao Arduino para acionar o alarme de Temperatura*/
     @FXML
     private void tempAlarmOn() throws SQLException {
+        tempOn.setSelected(true);
+        tempOff.setSelected(false);
         arduino.tempAlarmOn();
         tempMin.setVisible(true);
         tempMax.setVisible(true);
@@ -901,6 +936,8 @@ public class Controller implements SerialPortDataListener{
     /**Função que envia sinal ao Arduino para acionar o alarme de Porta*/
     @FXML
     private void doorAlarmOn()throws SQLException{
+        doorOn.setSelected(true);
+        doorOff.setSelected(false);
         arduino.doorAlarmOn();
         alarmes.updateAlarm(3, 1);
     }
@@ -917,6 +954,8 @@ public class Controller implements SerialPortDataListener{
     /**Função que envia sinal ao Arduino para acionar o alarme de Luminosidade*/
     @FXML
     private void lumAlarmOn()throws SQLException{
+        lumOn.setSelected(true);
+        lumOff.setSelected(false);
         arduino.lumAlarmOn();
         alarmes.updateAlarm(2, 1);
     }
@@ -1042,6 +1081,10 @@ public class Controller implements SerialPortDataListener{
     @FXML
     private TextField humMaxFiltro;
     @FXML
+    private TextField lumMinFiltro;
+    @FXML
+    private TextField lumMaxFiltro;
+    @FXML
     private Button confirmTemp;
     @FXML
     private Button aplicarFiltros;
@@ -1061,6 +1104,7 @@ public class Controller implements SerialPortDataListener{
     private ChoiceBox mesFiltro;
     @FXML
     private ChoiceBox anoFiltro;
+
     @FXML
     private RadioButton periodoOn;
     @FXML

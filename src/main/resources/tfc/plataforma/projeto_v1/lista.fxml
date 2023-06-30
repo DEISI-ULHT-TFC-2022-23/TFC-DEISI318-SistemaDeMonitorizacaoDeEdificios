@@ -73,13 +73,13 @@
             <Font name="System Bold" size="15.0" />
          </font>
       </Text>
-      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#0080ff" height="64.0" layoutX="1032.0" layoutY="552.0" onMouseClicked="#updateDb" stroke="TRANSPARENT" strokeLineCap="ROUND" strokeLineJoin="ROUND" strokeType="OUTSIDE" strokeWidth="5.0" width="226.0" />
-      <ImageView fitHeight="43.0" fitWidth="43.0" layoutX="1196.0" layoutY="562.0" onMouseClicked="#updateDb" pickOnBounds="true" preserveRatio="true">
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#0080ff" height="64.0" layoutX="1032.0" layoutY="552.0" onMouseClicked="#atualizarDados" stroke="TRANSPARENT" strokeLineCap="ROUND" strokeLineJoin="ROUND" strokeType="OUTSIDE" strokeWidth="5.0" width="226.0" />
+      <ImageView fitHeight="43.0" fitWidth="43.0" layoutX="1196.0" layoutY="562.0" onMouseClicked="#atualizarDados" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../../../img/refresh.png" />
          </image>
       </ImageView>
-      <Text fill="WHITE" layoutX="1063.0" layoutY="590.0" onMouseClicked="#updateDb" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" text="Atualizar Dados" textAlignment="CENTER">
+      <Text fill="WHITE" layoutX="1063.0" layoutY="590.0" onMouseClicked="#atualizarDados" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" text="Atualizar Dados" textAlignment="CENTER">
          <font>
             <Font name="System Bold" size="15.0" />
          </font>
@@ -112,28 +112,28 @@
             <Font size="20.0" />
          </font>
       </Text>
-      <TextField fx:id="tempMinFiltro" alignment="CENTER" layoutX="567.0" layoutY="130.0" prefHeight="25.0" prefWidth="127.0" promptText="Temperatura Mínima" />
-      <TextField fx:id="tempMaxFiltro" alignment="CENTER" layoutX="730.0" layoutY="130.0" prefHeight="25.0" prefWidth="127.0" promptText="Temperatura Máxima" />
-      <TextField fx:id="humMinFiltro" alignment="CENTER" layoutX="903.0" layoutY="130.0" prefHeight="25.0" prefWidth="127.0" promptText="Humidade Mínima" />
-      <TextField fx:id="humMaxFiltro" alignment="CENTER" layoutX="1056.0" layoutY="130.0" prefHeight="25.0" prefWidth="119.0" promptText="Humidade Máxima" />
-      <Text layoutX="547.0" layoutY="118.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Temperatura Mínima:" textAlignment="CENTER" wrappingWidth="167.0">
+      <TextField fx:id="tempMinFiltro" alignment="CENTER" layoutX="558.0" layoutY="134.0" prefHeight="25.0" prefWidth="71.0" promptText="Mínimo" />
+      <TextField fx:id="tempMaxFiltro" alignment="CENTER" layoutX="646.0" layoutY="135.0" prefHeight="25.0" prefWidth="71.0" promptText="Máximo" />
+      <TextField fx:id="humMinFiltro" alignment="CENTER" layoutX="788.0" layoutY="135.0" prefHeight="25.0" prefWidth="71.0" promptText="Mínimo" />
+      <TextField fx:id="humMaxFiltro" alignment="CENTER" layoutX="877.0" layoutY="135.0" prefHeight="25.0" prefWidth="71.0" promptText="Máximo" />
+      <Text layoutX="551.0" layoutY="106.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Temperatura Mínima:" textAlignment="CENTER" wrappingWidth="84.99999999999989">
          <font>
-            <Font size="15.0" />
+            <Font size="13.0" />
          </font>
       </Text>
-      <Text layoutX="721.0" layoutY="117.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Temperatura Máxima:" textAlignment="CENTER" wrappingWidth="144.1552734375">
+      <Text layoutX="641.0" layoutY="107.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Temperatura Máxima:" textAlignment="CENTER" wrappingWidth="84.99999999999989">
          <font>
-            <Font size="15.0" />
+            <Font size="13.0" />
          </font>
       </Text>
-      <Text layoutX="905.0" layoutY="117.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Humidade Mínima:" textAlignment="CENTER" wrappingWidth="126.99999999999989">
+      <Text layoutX="781.0" layoutY="107.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Humidade Mínima:" textAlignment="CENTER" wrappingWidth="84.99999999999989">
          <font>
-            <Font size="15.0" />
+            <Font size="13.0" />
          </font>
       </Text>
-      <Text layoutX="1046.0" layoutY="117.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Humidade Máxima:" textAlignment="CENTER" wrappingWidth="138.1552734375">
+      <Text layoutX="874.0" layoutY="107.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Humidade Máxima:" textAlignment="CENTER" wrappingWidth="84.99999999999989">
          <font>
-            <Font size="15.0" />
+            <Font size="13.0" />
          </font>
       </Text>
       <Text layoutX="310.0" layoutY="113.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Data:" textAlignment="CENTER" wrappingWidth="49.0">
@@ -143,5 +143,17 @@
       </Text>
       <Button fx:id="removerFiltros" layoutX="1214.0" layoutY="136.0" mnemonicParsing="false" onAction="#removerFiltros" style="-fx-background-color: #007eff;" text="Remover Filtros" textAlignment="CENTER" textFill="WHITE" />
       <Button fx:id="aplicarFiltros" layoutX="1214.0" layoutY="104.0" mnemonicParsing="false" onAction="#filterList" prefHeight="25.0" prefWidth="99.0" style="-fx-background-color: #007eff;" text="Aplicar Filtros" textAlignment="CENTER" textFill="WHITE" />
+      <TextField fx:id="lumMinFiltro" alignment="CENTER" layoutX="1009.0" layoutY="135.0" prefHeight="25.0" prefWidth="71.0" promptText="Mínimo" />
+      <TextField fx:id="lumMaxFiltro" alignment="CENTER" layoutX="1106.0" layoutY="135.0" prefHeight="25.0" prefWidth="71.0" promptText="Máximo" />
+      <Text layoutX="1002.0" layoutY="107.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Luminosidade Mínima:" textAlignment="CENTER" wrappingWidth="84.99999999999989">
+         <font>
+            <Font size="13.0" />
+         </font>
+      </Text>
+      <Text layoutX="1103.0" layoutY="107.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Luminosidade Máxima:" textAlignment="CENTER" wrappingWidth="84.99999999999989">
+         <font>
+            <Font size="13.0" />
+         </font>
+      </Text>
     </children>
 </AnchorPane>
